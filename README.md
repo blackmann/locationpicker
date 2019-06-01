@@ -22,13 +22,31 @@ Get an API key at <https://cloud.google.com/maps-platform/> if you haven't alrea
 
 ### Android
 
-Specify your API key in the application manifest `android/app/src/main/AndroidManifest.xml`:
+Specify your API key in the application manifest `android/app/src/main/AndroidManifest.xml` and add `ACCESS_FINE_LOCATION` permission:
 
 ```xml
 <manifest ...
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
   <application ...
     <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="YOUR KEY HERE"/>
+```
+
+Update your gradle.properties file with this:
+```groovy
+android.enableJetifier=true
+android.useAndroidX=true
+org.gradle.jvmargs=-Xmx1536M
+```
+
+Please also make sure that you have those dependencies in your build.gradle:
+```groovy
+  dependencies {
+      classpath 'com.android.tools.build:gradle:3.3.0'
+      classpath 'com.google.gms:google-services:4.2.0'
+  }
+  ...
+  compileSdkVersion 28
 ```
 
 ### iOS
@@ -74,6 +92,9 @@ Opt-in to the embedded views preview by adding a boolean property to the app's `
 with the key `io.flutter.embedded_views_preview` and the value `YES`.
 
 ![info.plist](https://i.ibb.co/hWN3Y75/plist.png "Place inside the dict values")
+
+Also add these to the dict values in `Info.plist` for location request to work on iOS
+![info.plist](https://i.ibb.co/2Y3X2jY/locationperm.png)
 
 
 ## Sample Usage
