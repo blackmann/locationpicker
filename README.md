@@ -1,4 +1,4 @@
-# locationpicker
+# Flutter Place Picker [![Pub](https://img.shields.io/pub/v/place_picker.svg)](https://pub.dev/packages/place_picker)
 
 The missing location picker made in Flutter for Flutter.
 <p float="left">
@@ -11,7 +11,7 @@ The missing location picker made in Flutter for Flutter.
 
 ## Usage
 
-To use this plugin, add `locationpicker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
+To use this plugin, add `place_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
 
 
 ## Getting Started
@@ -80,7 +80,7 @@ with the key `io.flutter.embedded_views_preview` and the value `YES`.
 Import the package into your code 
 
 ```dart
-import 'package:locationpicker/locationpicker.dart';
+import 'package:place_picker/place_picker.dart';
 ```
 
 Create a method like below, and call it in `onTap` of a button or InkWell. A `LocationResult` will be returned
