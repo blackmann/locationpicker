@@ -1,7 +1,10 @@
 # locationpicker
 
 The missing location picker made in Flutter for Flutter.
-![Screenshot 1](https://i.ibb.co/MNKDmJ4/sc1.png) ![Screenshot 2](https://i.ibb.co/Ry7396K/sc2.png "With autocomplete")
+<p float="left">
+  <img src="https://i.ibb.co/MNKDmJ4/sc1.png" width=400 />
+  <img src="https://i.ibb.co/Ry7396K/sc2.png" width=400 />
+</p>
 
 
 ⚠️ Please note: This library will <b>NOT</b> be affected by the deprecation of Place Picker as [indicated here](https://developers.google.com/places/android-sdk/placepicker).
