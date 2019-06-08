@@ -1,5 +1,3 @@
-library locationpicker;
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -207,6 +205,10 @@ class PlacePickerState extends State<PlacePicker> {
   /// is hidden so as to give more room and better experience for the
   /// autocomplete list overlay.
   void searchPlace(String place) {
+    if (context == null) {
+      return;
+    }
+
     clearOverlay();
 
     setState(() {
