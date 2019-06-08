@@ -1,3 +1,7 @@
+## [0.9.4] - 8 Jun 2019.
+
+Working on library health.
+
 ## [0.9.3] - 8 Jun 2019.
 
 Fixed issue with delayed call to searchPlace
