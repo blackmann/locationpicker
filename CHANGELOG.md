@@ -1,4 +1,4 @@
-## [0.9.1] - 1 Jun 2019.
+## [0.9.2] - 1 Jun 2019.
 
 Fixed issue where `setState` from http response callbacks was being called
 after widget was disposed/unmounted
