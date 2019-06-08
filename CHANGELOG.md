@@ -1,4 +1,4 @@
-## [0.9.3] - 1 Jun 2019.
+## [0.9.3] - 8 Jun 2019.
 
 Fixed issue with delayed call to searchPlace
  
@@ -6,7 +6,7 @@ Fixed issue with delayed call to searchPlace
 This could have been due to some delay caused by the debouncer proceeding after
 the widget has unmounted
 
-## [0.9.2] - 1 Jun 2019.
+## [0.9.2] - 8 Jun 2019.
 
 Fixed issue where `setState` from http response callbacks was being called
 after widget was disposed/unmounted
