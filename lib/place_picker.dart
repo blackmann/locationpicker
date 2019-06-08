@@ -115,6 +115,13 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   @override
+  void setState(fn) {
+    if (this.mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
