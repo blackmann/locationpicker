@@ -1,3 +1,8 @@
+## [0.9.5] - 9 Jun 2019.
+
+Fixed issue where autocomplete overlay still remain after widget has been
+disposed until whole app is restarted.
+
 ## [0.9.4] - 8 Jun 2019.
 
 Working on library health.

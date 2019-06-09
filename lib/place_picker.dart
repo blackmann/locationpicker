@@ -120,6 +120,12 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   @override
+  void dispose() {
+    this.overlayEntry.remove();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -242,7 +248,9 @@ class PlacePickerState extends State<PlacePicker> {
                     SizedBox(
                       height: 24,
                       width: 24,
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                      ),
                     ),
                     SizedBox(
                       width: 24,
