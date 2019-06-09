@@ -121,7 +121,7 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   void dispose() {
-    this.overlayEntry.remove();
+    this.overlayEntry?.remove();
     super.dispose();
   }
 

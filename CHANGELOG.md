@@ -1,3 +1,7 @@
+## [0.9.6] - 9 Jun 2019.
+
+Fixed fatal typo
+
 ## [0.9.5] - 9 Jun 2019.
 
 Fixed issue where autocomplete overlay still remain after widget has been
