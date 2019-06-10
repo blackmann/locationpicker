@@ -9,6 +9,10 @@ The missing location picker made in Flutter for Flutter.
 
 ⚠️ Please note: This library will <b>NOT</b> be affected by the deprecation of Place Picker as [indicated here](https://developers.google.com/places/android-sdk/placepicker).
 
+
+🍭 Remember to enable `Places API`, `Maps SDK for Android` and `Maps SDK for iOS` for your API key.
+
+
 ## Usage
 
 To use this plugin, add `place_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
@@ -26,10 +30,17 @@ Specify your API key in the application manifest `android/app/src/main/AndroidMa
 
 ```xml
 <manifest ...
+
+  <!-- Add this permission -->
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
   <application ...
+    <!-- Add your api key here -->
     <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="YOUR KEY HERE"/>
+    <activity ..../>
+  </application>
+</manifest>
 ```
 
 Update your gradle.properties file with this:
@@ -41,11 +52,14 @@ org.gradle.jvmargs=-Xmx1536M
 
 Please also make sure that you have those dependencies in your build.gradle:
 ```groovy
+  // parent level build.gradle (android/build.gradle)
   dependencies {
       classpath 'com.android.tools.build:gradle:3.3.0'
       classpath 'com.google.gms:google-services:4.2.0'
   }
   ...
+
+  // app level build.gradle (android/app/build.gradle)
   compileSdkVersion 28
 ```
 

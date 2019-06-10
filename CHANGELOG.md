@@ -1,3 +1,7 @@
+## [0.9.7] - 10 Jun 2019.
+
+Consistent UI. Made installation guidelines more clearer.
+
 ## [0.9.6] - 9 Jun 2019.
 
 Fixed fatal typo

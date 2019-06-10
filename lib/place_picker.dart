@@ -566,6 +566,7 @@ class SearchInputState extends State {
         children: <Widget>[
           Icon(
             Icons.search,
+            color: Colors.black,
           ),
           SizedBox(
             width: 8,
@@ -619,6 +620,7 @@ class SelectPlaceAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: Colors.white,
       child: InkWell(
         onTap: () {
           this.onTap();
@@ -670,6 +672,7 @@ class NearbyPlaceItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: Colors.white,
       child: InkWell(
         onTap: onTap,
         child: Padding(
