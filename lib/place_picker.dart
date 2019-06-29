@@ -56,7 +56,8 @@ class AutoCompleteItem {
 /// [google_maps_flutter](https://github.com/flutter/plugins/tree/master/packages/google_maps_flutter)
 /// and other API calls to [Google Places API](https://developers.google.com/places/web-service/intro)
 ///
-/// API key provided should have Maps API enabled for it
+/// API key provided should have `Maps SDK for Android`, `Maps SDK for iOS`
+/// and `Places API`  enabled for it
 class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
@@ -66,14 +67,12 @@ class PlacePicker extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return PlacePickerState(this.apiKey);
+    return PlacePickerState();
   }
 }
 
 /// Place picker state
 class PlacePickerState extends State<PlacePicker> {
-  final String apiKey;
-
   /// Initial waiting location for the map before the current user location
   /// is fetched.
   static final LatLng initialTarget = LatLng(5.5911921, -0.3198162);
@@ -104,8 +103,10 @@ class PlacePickerState extends State<PlacePicker> {
 
   bool hasSearchTerm = false;
 
+  String previousSearchTerm = '';
+
   // constructor
-  PlacePickerState(this.apiKey);
+  PlacePickerState();
 
   void onMapCreated(GoogleMapController controller) {
     this.mapController.complete(controller);
@@ -211,6 +212,14 @@ class PlacePickerState extends State<PlacePicker> {
   /// is hidden so as to give more room and better experience for the
   /// autocomplete list overlay.
   void searchPlace(String place) {
+    // on keyboard dismissal, the search was being triggered again
+    // this is to cap that.
+    if (place == this.previousSearchTerm) {
+      return;
+    } else {
+      previousSearchTerm = place;
+    }
+
     if (context == null) {
       return;
     }
@@ -280,7 +289,7 @@ class PlacePickerState extends State<PlacePicker> {
     place = place.replaceAll(" ", "+");
     var endpoint =
         "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
-            "key=${this.apiKey}&" +
+            "key=${widget.apiKey}&" +
             "input={$place}&sessiontoken=${this.sessionToken}";
 
     if (this.locationResult != null) {
@@ -311,6 +320,7 @@ class PlacePickerState extends State<PlacePicker> {
             aci.length = t['matched_substrings'][0]['length'];
 
             suggestions.add(RichSuggestion(aci, () {
+              FocusScope.of(context).requestFocus(FocusNode());
               decodeAndSelectPlace(aci.id);
             }));
           }
@@ -330,7 +340,7 @@ class PlacePickerState extends State<PlacePicker> {
     clearOverlay();
 
     String endpoint =
-        "https://maps.googleapis.com/maps/api/place/details/json?key=${this.apiKey}" +
+        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
             "&placeid=$placeId";
 
     http.get(endpoint).then((response) {
@@ -412,7 +422,7 @@ class PlacePickerState extends State<PlacePicker> {
   void getNearbyPlaces(LatLng latLng) {
     http
         .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "key=${this.apiKey}&" +
+            "key=${widget.apiKey}&" +
             "location=${latLng.latitude},${latLng.longitude}&radius=150")
         .then((response) {
       if (response.statusCode == 200) {
@@ -448,7 +458,7 @@ class PlacePickerState extends State<PlacePicker> {
     http
         .get("https://maps.googleapis.com/maps/api/geocode/json?" +
             "latlng=${latLng.latitude},${latLng.longitude}&" +
-            "key=${this.apiKey}")
+            "key=${widget.apiKey}")
         .then((response) {
       if (response.statusCode == 200) {
         Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -511,20 +521,18 @@ class SearchInput extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return SearchInputState(this.onSearchInput);
+    return SearchInputState();
   }
 }
 
-class SearchInputState extends State {
-  final ValueChanged<String> onSearchInput;
-
+class SearchInputState extends State<SearchInput> {
   TextEditingController editController = TextEditingController();
 
   Timer debouncer;
 
   bool hasSearchEntry = false;
 
-  SearchInputState(this.onSearchInput);
+  SearchInputState();
 
   @override
   void initState() {
@@ -543,7 +551,7 @@ class SearchInputState extends State {
   void onSearchInputChange() {
     if (this.editController.text.isEmpty) {
       this.debouncer?.cancel();
-      this.onSearchInput(this.editController.text);
+      widget.onSearchInput(this.editController.text);
       return;
     }
 
@@ -552,7 +560,7 @@ class SearchInputState extends State {
     }
 
     this.debouncer = Timer(Duration(milliseconds: 500), () {
-      this.onSearchInput(this.editController.text);
+      widget.onSearchInput(this.editController.text);
     });
   }
 

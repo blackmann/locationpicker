@@ -1,3 +1,7 @@
+## [0.9.8] - 29 Jun 2019.
+
+Hide keyboard on suggestion selection. Refactoring.
+
 ## [0.9.7] - 10 Jun 2019.
 
 Consistent UI. Made installation guidelines more clearer.
