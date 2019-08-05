@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
-import 'uuid.dart';
+import 'package:lunch2/uuid.dart';
 
 /// The result returned after completing location selection.
 class LocationResult {
@@ -19,6 +19,11 @@ class LocationResult {
 
   /// Latitude/Longitude of the selected location.
   LatLng latLng;
+
+  /// Formatted address suggested by Google
+  String formattedAddress;
+
+  String placeId;
 }
 
 /// Nearby place data will be deserialized into this model.
@@ -242,41 +247,41 @@ class PlacePickerState extends State<PlacePicker> {
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-            top: appBarBox.size.height,
-            width: size.width,
-            child: Material(
-              elevation: 1,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
+        top: appBarBox.size.height,
+        width: size.width,
+        child: Material(
+          elevation: 1,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              vertical: 16,
+              horizontal: 24,
+            ),
+            color: Colors.white,
+            child: Row(
+              children: <Widget>[
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                  ),
                 ),
-                color: Colors.white,
-                child: Row(
-                  children: <Widget>[
-                    SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 24,
-                    ),
-                    Expanded(
-                      child: Text(
-                        "Finding place...",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    )
-                  ],
+                SizedBox(
+                  width: 24,
                 ),
-              ),
+                Expanded(
+                  child: Text(
+                    "Finding place...",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+              ],
             ),
           ),
+        ),
+      ),
     );
 
     Overlay.of(context).insert(this.overlayEntry);
@@ -369,16 +374,16 @@ class PlacePickerState extends State<PlacePicker> {
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-            width: size.width,
-            top: appBarBox.size.height,
-            child: Material(
-              elevation: 1,
-              color: Colors.white,
-              child: Column(
-                children: suggestions,
-              ),
-            ),
+        width: size.width,
+        top: appBarBox.size.height,
+        child: Material(
+          elevation: 1,
+          color: Colors.white,
+          child: Column(
+            children: suggestions,
           ),
+        ),
+      ),
     );
 
     Overlay.of(context).insert(this.overlayEntry);
@@ -395,9 +400,10 @@ class PlacePickerState extends State<PlacePicker> {
     }
 
     for (NearbyPlace np in this.nearbyPlaces) {
-      if (np.latLng == this.locationResult.latLng) {
+      if (np.latLng == this.locationResult.latLng &&
+          np.name != this.locationResult.locality) {
         this.locationResult.name = np.name;
-        return np.name;
+        return "${np.name}, ${this.locationResult.locality}";
       }
     }
 
@@ -463,16 +469,18 @@ class PlacePickerState extends State<PlacePicker> {
       if (response.statusCode == 200) {
         Map<String, dynamic> responseJson = jsonDecode(response.body);
 
-        String road =
-            responseJson['results'][0]['address_components'][0]['short_name'];
-        String locality =
-            responseJson['results'][0]['address_components'][1]['short_name'];
+        final result = responseJson['results'][0];
+
+        String road = result['address_components'][0]['short_name'];
+        String locality = result['address_components'][1]['short_name'];
 
         setState(() {
           this.locationResult = LocationResult();
           this.locationResult.name = road;
           this.locationResult.locality = locality;
           this.locationResult.latLng = latLng;
+          this.locationResult.formattedAddress = result['formatted_address'];
+          this.locationResult.placeId = result['place_id'];
         });
       }
     }).catchError((error) {
