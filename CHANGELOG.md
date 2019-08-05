@@ -1,3 +1,7 @@
+## [0.9.9] - 5 Aug 2019.
+
+Added place id and formatted address to results
+
 ## [0.9.8] - 29 Jun 2019.
 
 Hide keyboard on suggestion selection. Refactoring.
