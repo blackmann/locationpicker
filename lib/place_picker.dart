@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
-import 'package:lunch2/uuid.dart';
+import 'uuid.dart';
 
 /// The result returned after completing location selection.
 class LocationResult {
