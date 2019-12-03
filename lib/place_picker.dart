@@ -68,7 +68,11 @@ class PlacePicker extends StatefulWidget {
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
 
-  PlacePicker(this.apiKey);
+  /// Location to be displayed when screen is showed. If this is set or not null, the
+  /// map does not pan to the user's current location.
+  final LatLng displayLocation;
+
+  PlacePicker(this.apiKey, {this.displayLocation});
 
   @override
   State<StatefulWidget> createState() {
@@ -78,20 +82,10 @@ class PlacePicker extends StatefulWidget {
 
 /// Place picker state
 class PlacePickerState extends State<PlacePicker> {
-  /// Initial waiting location for the map before the current user location
-  /// is fetched.
-  static final LatLng initialTarget = LatLng(5.5911921, -0.3198162);
-
   final Completer<GoogleMapController> mapController = Completer();
 
   /// Indicator for the selected location
-  final Set<Marker> markers = Set()
-    ..add(
-      Marker(
-        position: initialTarget,
-        markerId: MarkerId("selected-location"),
-      ),
-    );
+  final Set<Marker> markers = Set();
 
   /// Result returned after user completes selection
   LocationResult locationResult;
@@ -126,6 +120,15 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    markers.add(Marker(
+      position: widget.displayLocation ?? LatLng(5.6037, 0.1870),
+      markerId: MarkerId("selected-location"),
+    ));
+  }
+
+  @override
   void dispose() {
     this.overlayEntry?.remove();
     super.dispose();
@@ -149,7 +152,7 @@ class PlacePickerState extends State<PlacePicker> {
           Expanded(
             child: GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: initialTarget,
+                target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
                 zoom: 15,
               ),
               myLocationButtonEnabled: true,
@@ -510,6 +513,11 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   void moveToCurrentUserLocation() {
+    if (widget.displayLocation != null) {
+      moveToLocation(widget.displayLocation);
+      return;
+    }
+
     var location = Location();
     location.getLocation().then((locationData) {
       LatLng target = LatLng(locationData.latitude, locationData.longitude);
