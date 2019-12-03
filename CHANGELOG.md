@@ -1,3 +1,7 @@
+## [0.9.10] - 3 Dec 2019.
+
+Pass custom initial location or previously selected location.
+
 ## [0.9.9] - 5 Aug 2019.
 
 Added place id and formatted address to results
@@ -26,7 +30,7 @@ Working on library health.
 ## [0.9.3] - 8 Jun 2019.
 
 Fixed issue with delayed call to searchPlace
- 
+
 `searchPlace` was being called (sometimes) after the widget has unmounted.  
 This could have been due to some delay caused by the debouncer proceeding after
 the widget has unmounted
