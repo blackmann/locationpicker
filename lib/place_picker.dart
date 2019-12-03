@@ -68,9 +68,11 @@ class PlacePicker extends StatefulWidget {
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
 
-  final LatLng defaultLocation;
+  /// Location to be displayed when screen is showed. If this is set or not null, the
+  /// map does not pan to the user's current location.
+  final LatLng displayLocation;
 
-  PlacePicker(this.apiKey, {this.defaultLocation});
+  PlacePicker(this.apiKey, {this.displayLocation});
 
   @override
   State<StatefulWidget> createState() {
@@ -121,7 +123,7 @@ class PlacePickerState extends State<PlacePicker> {
   void initState() {
     super.initState();
     markers.add(Marker(
-      position: widget.defaultLocation ?? LatLng(5.6037, 0.1870),
+      position: widget.displayLocation ?? LatLng(5.6037, 0.1870),
       markerId: MarkerId("selected-location"),
     ));
   }
@@ -150,7 +152,7 @@ class PlacePickerState extends State<PlacePicker> {
           Expanded(
             child: GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: widget.defaultLocation ?? LatLng(5.6037, 0.1870),
+                target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
                 zoom: 15,
               ),
               myLocationButtonEnabled: true,
@@ -511,6 +513,11 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   void moveToCurrentUserLocation() {
+    if (widget.displayLocation != null) {
+      moveToLocation(widget.displayLocation);
+      return;
+    }
+
     var location = Location();
     location.getLocation().then((locationData) {
       LatLng target = LatLng(locationData.latitude, locationData.longitude);
