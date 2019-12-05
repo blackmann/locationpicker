@@ -1,22 +1,19 @@
-# Flutter Place Picker  [![Pub](https://img.shields.io/pub/v/place_picker.svg)](https://pub.dev/packages/place_picker)
+# Flutter Place Picker [![Pub](https://img.shields.io/pub/v/place_picker.svg)](https://pub.dev/packages/place_picker)
 
 The missing location picker made in Flutter for Flutter.
+
 <p float="left">
   <img src="https://i.ibb.co/MNKDmJ4/sc1.png" width=400 />
   <img src="https://i.ibb.co/Ry7396K/sc2.png" width=400 />
 </p>
 
-
 ⚠️ Please note: This library will <b>NOT</b> be affected by the deprecation of Place Picker as [indicated here](https://developers.google.com/places/android-sdk/placepicker).
 
-
 🍭 Remember to enable `Places API`, `Maps SDK for Android` and `Maps SDK for iOS` for your API key.
-
 
 ## Usage
 
 To use this plugin, add `place_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
-
 
 ## Getting Started
 
@@ -44,6 +41,7 @@ Specify your API key in the application manifest `android/app/src/main/AndroidMa
 ```
 
 Update your gradle.properties file with this:
+
 ```groovy
 android.enableJetifier=true
 android.useAndroidX=true
@@ -51,6 +49,7 @@ org.gradle.jvmargs=-Xmx1536M
 ```
 
 Please also make sure that you have those dependencies in your build.gradle:
+
 ```groovy
   // parent level build.gradle (android/build.gradle)
   dependencies {
@@ -102,6 +101,7 @@ import GoogleMaps
   }
 }
 ```
+
 Opt-in to the embedded views preview by adding a boolean property to the app's `Info.plist` file
 with the key `io.flutter.embedded_views_preview` and the value `YES`.
 
@@ -110,9 +110,9 @@ with the key `io.flutter.embedded_views_preview` and the value `YES`.
 Also add these to the dict values in `Info.plist` for location request to work on iOS
 ![info.plist](https://i.ibb.co/2Y3X2jY/locationperm.png)
 
-
 ## Sample Usage
-Import the package into your code 
+
+Import the package into your code
 
 ```dart
 import 'package:place_picker/place_picker.dart';
@@ -120,13 +120,17 @@ import 'package:place_picker/place_picker.dart';
 
 Create a method like below, and call it in `onTap` of a button or InkWell. A `LocationResult` will be returned
 with the name and lat/lng of the selected place. You can then handle the result in any way you want.
+Pass in an optional `LatLng displayLocation` to display that location instead. This is useful when you want the map
+to display the previously selected location.
 
 ```dart
 void showPlacePicker() async {
     LocationResult result = await Navigator.of(context).push(MaterialPageRoute(
         builder: (context) =>
-            PlacePicker("YOUR API KEY")));
-    
+            PlacePicker("YOUR API KEY",
+                        displayLocation: customLocation,
+                        )));
+
     // Handle the result in your way
     print(result);
 }
