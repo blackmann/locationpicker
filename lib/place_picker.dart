@@ -146,7 +146,6 @@ class PlacePickerState extends State<PlacePicker> {
         leading: null,
         automaticallyImplyLeading: false,
       ),
-      backgroundColor: Colors.white,
       body: Column(
         children: <Widget>[
           Expanded(
@@ -259,7 +258,6 @@ class PlacePickerState extends State<PlacePicker> {
               vertical: 16,
               horizontal: 24,
             ),
-            color: Colors.white,
             child: Row(
               children: <Widget>[
                 SizedBox(
@@ -381,7 +379,6 @@ class PlacePickerState extends State<PlacePicker> {
         top: appBarBox.size.height,
         child: Material(
           elevation: 1,
-          color: Colors.white,
           child: Column(
             children: suggestions,
           ),
@@ -590,7 +587,7 @@ class SearchInputState extends State<SearchInput> {
         children: <Widget>[
           Icon(
             Icons.search,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.body1.color,
           ),
           SizedBox(
             width: 8,
@@ -629,7 +626,7 @@ class SearchInputState extends State<SearchInput> {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.grey[100],
+        color: Theme.of(context).canvasColor,
       ),
     );
   }
@@ -644,7 +641,6 @@ class SelectPlaceAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
       child: InkWell(
         onTap: () {
           this.onTap();
@@ -696,7 +692,6 @@ class NearbyPlaceItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -781,8 +776,8 @@ class RichSuggestion extends StatelessWidget {
     result.add(TextSpan(
       text: boldText,
       style: TextStyle(
-        color: Colors.black,
         fontSize: 15,
+        color: Theme.of(context).textTheme.body1.color,
       ),
     ));
 
