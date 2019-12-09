@@ -1,3 +1,7 @@
+## [0.9.11] - 9 Dec 2019.
+
+Dark Theme support
+
 ## [0.9.10] - 3 Dec 2019.
 
 Pass custom initial location or previously selected location.
