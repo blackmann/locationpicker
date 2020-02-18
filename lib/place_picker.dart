@@ -23,7 +23,29 @@ class LocationResult {
   /// Formatted address suggested by Google
   String formattedAddress;
 
+  AddressComponent country;
+
+  AddressComponent city;
+
+  AddressComponent administrativeAreaLevel1;
+
+  AddressComponent administrativeAreaLevel2;
+
+  AddressComponent subLocalityLevel1;
+
+  AddressComponent subLocalityLevel2;
+
+  String postalCode;
+
   String placeId;
+}
+
+class AddressComponent {
+  String name;
+  String shortName;
+
+  AddressComponent(this.name, this.shortName,);
+
 }
 
 /// Nearby place data will be deserialized into this model.
@@ -481,6 +503,15 @@ class PlacePickerState extends State<PlacePicker> {
           this.locationResult.latLng = latLng;
           this.locationResult.formattedAddress = result['formatted_address'];
           this.locationResult.placeId = result['place_id'];
+
+          this.locationResult.postalCode = result['address_components'][7]['short_name'];
+          this.locationResult.country = AddressComponent(result['address_components'][6]['long_name'], result['address_components'][6]['short_name'],);
+          this.locationResult.administrativeAreaLevel1 = AddressComponent(result['address_components'][5]['long_name'], result['address_components'][5]['short_name'],);
+          this.locationResult.administrativeAreaLevel2 = AddressComponent(result['address_components'][4]['long_name'], result['address_components'][4]['short_name'],);
+          this.locationResult.city = AddressComponent(result['address_components'][3]['long_name'], result['address_components'][3]['short_name'],);
+          this.locationResult.subLocalityLevel1 = AddressComponent(result['address_components'][2]['long_name'], result['address_components'][2]['short_name'],);
+          this.locationResult.subLocalityLevel2 = AddressComponent(result['address_components'][1]['long_name'], result['address_components'][1]['short_name'],);
+
         });
       }
     }).catchError((error) {
