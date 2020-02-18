@@ -42,9 +42,9 @@ class LocationResult {
 
 class AddressComponent {
   String name;
-  String code;
+  String shortName;
 
-  AddressComponent(this.name, this.code,);
+  AddressComponent(this.name, this.shortName,);
 
 }
 
