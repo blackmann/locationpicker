@@ -26,8 +26,9 @@ class PlacePicker extends StatefulWidget {
   /// map does not pan to the user's current location.
   final LatLng displayLocation;
   LocalizationItem localizationItem;
+  final bool displayNearbyPlaces;
 
-  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
+  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem, this.displayNearbyPlaces = true}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -119,7 +120,11 @@ class PlacePickerState extends State<PlacePicker> {
             ),
           ),
           if (!this.hasSearchTerm)
-            Expanded(
+            !widget.displayNearbyPlaces
+            ? SelectPlaceAction(getLocationName(), () {
+              Navigator.of(context).pop(this.locationResult);
+            })
+            : Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
