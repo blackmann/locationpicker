@@ -1,3 +1,6 @@
+## [0.9.12] - 12 Apr 2020
+Update instructions for installation
+
 ## [0.9.11] - 9 Dec 2019.
 
 Dark Theme support
