@@ -7,6 +7,8 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'uuid.dart';
 
+export 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
+
 /// The result returned after completing location selection.
 class LocationResult {
   /// The human readable name of the location. This is primarily the
@@ -44,8 +46,11 @@ class AddressComponent {
   String name;
   String shortName;
 
-  AddressComponent(this.name, this.shortName,);
+  AddressComponent(this.name, this.shortName);
 
+  static AddressComponent fromJson(dynamic json) {
+    return AddressComponent(json['long_name'], json['short_name']);
+  }
 }
 
 /// Nearby place data will be deserialized into this model.
@@ -97,9 +102,7 @@ class PlacePicker extends StatefulWidget {
   PlacePicker(this.apiKey, {this.displayLocation});
 
   @override
-  State<StatefulWidget> createState() {
-    return PlacePickerState();
-  }
+  State<StatefulWidget> createState() => PlacePickerState();
 }
 
 /// Place picker state
@@ -161,9 +164,7 @@ class PlacePickerState extends State<PlacePicker> {
     return Scaffold(
       appBar: AppBar(
         key: this.appBarKey,
-        title: SearchInput((it) {
-          searchPlace(it);
-        }),
+        title: SearchInput(searchPlace),
         centerTitle: true,
         leading: null,
         automaticallyImplyLeading: false,
@@ -172,10 +173,7 @@ class PlacePickerState extends State<PlacePicker> {
         children: <Widget>[
           Expanded(
             child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
-                zoom: 15,
-              ),
+              initialCameraPosition: CameraPosition(target: widget.displayLocation ?? LatLng(5.6037, 0.1870), zoom: 15),
               myLocationButtonEnabled: true,
               myLocationEnabled: true,
               onMapCreated: onMapCreated,
@@ -186,43 +184,25 @@ class PlacePickerState extends State<PlacePicker> {
               markers: markers,
             ),
           ),
-          this.hasSearchTerm
-              ? SizedBox()
-              : Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SelectPlaceAction(getLocationName(), () {
-                        Navigator.of(context).pop(this.locationResult);
-                      }),
-                      Divider(
-                        height: 8,
-                      ),
-                      Padding(
-                        child: Text(
-                          "Nearby Places",
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView(
-                          children: this
-                              .nearbyPlaces
-                              .map((it) => NearbyPlaceItem(it, () {
-                                    moveToLocation(it.latLng);
-                                  }))
-                              .toList(),
-                        ),
-                      ),
-                    ],
+          if (!this.hasSearchTerm)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SelectPlaceAction(getLocationName(), () => Navigator.of(context).pop(this.locationResult)),
+                  Divider(height: 8),
+                  Padding(
+                    child: Text("Nearby Places", style: TextStyle(fontSize: 16)),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   ),
-                ),
+                  Expanded(
+                    child: ListView(
+                      children: nearbyPlaces.map((it) => NearbyPlaceItem(it, () => moveToLocation(it.latLng))).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -245,9 +225,9 @@ class PlacePickerState extends State<PlacePicker> {
     // this is to cap that.
     if (place == this.previousSearchTerm) {
       return;
-    } else {
-      previousSearchTerm = place;
     }
+
+    previousSearchTerm = place;
 
     if (context == null) {
       return;
@@ -264,10 +244,9 @@ class PlacePickerState extends State<PlacePicker> {
     }
 
     final RenderBox renderBox = context.findRenderObject();
-    Size size = renderBox.size;
+    final size = renderBox.size;
 
-    final RenderBox appBarBox =
-        this.appBarKey.currentContext.findRenderObject();
+    final RenderBox appBarBox = this.appBarKey.currentContext.findRenderObject();
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -276,30 +255,12 @@ class PlacePickerState extends State<PlacePicker> {
         child: Material(
           elevation: 1,
           child: Container(
-            padding: EdgeInsets.symmetric(
-              vertical: 16,
-              horizontal: 24,
-            ),
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             child: Row(
               children: <Widget>[
-                SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                  ),
-                ),
-                SizedBox(
-                  width: 24,
-                ),
-                Expanded(
-                  child: Text(
-                    "Finding place...",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                )
+                SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 3)),
+                SizedBox(width: 24),
+                Expanded(child: Text("Finding place...", style: TextStyle(fontSize: 16)))
               ],
             ),
           ),
@@ -313,76 +274,86 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   /// Fetches the place autocomplete list with the query [place].
-  void autoCompleteSearch(String place) {
-    place = place.replaceAll(" ", "+");
-    var endpoint =
-        "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
-            "key=${widget.apiKey}&" +
-            "input={$place}&sessiontoken=${this.sessionToken}";
+  void autoCompleteSearch(String place) async {
+    try {
+      place = place.replaceAll(" ", "+");
 
-    if (this.locationResult != null) {
-      endpoint += "&location=${this.locationResult.latLng.latitude}," +
-          "${this.locationResult.latLng.longitude}";
-    }
-    http.get(endpoint).then((response) {
-      if (response.statusCode == 200) {
-        Map<String, dynamic> data = jsonDecode(response.body);
-        List<dynamic> predictions = data['predictions'];
-
-        List<RichSuggestion> suggestions = [];
-
-        if (predictions.isEmpty) {
-          AutoCompleteItem aci = AutoCompleteItem();
-          aci.text = "No result found";
-          aci.offset = 0;
-          aci.length = 0;
-
-          suggestions.add(RichSuggestion(aci, () {}));
-        } else {
-          for (dynamic t in predictions) {
-            AutoCompleteItem aci = AutoCompleteItem();
-
-            aci.id = t['place_id'];
-            aci.text = t['description'];
-            aci.offset = t['matched_substrings'][0]['offset'];
-            aci.length = t['matched_substrings'][0]['length'];
-
-            suggestions.add(RichSuggestion(aci, () {
-              FocusScope.of(context).requestFocus(FocusNode());
-              decodeAndSelectPlace(aci.id);
-            }));
-          }
-        }
-
-        displayAutoCompleteSuggestions(suggestions);
+      var endpoint = "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
+          "key=${widget.apiKey}&" +
+          "input={$place}&sessiontoken=${this.sessionToken}";
+      if (this.locationResult != null) {
+        endpoint += "&location=${this.locationResult.latLng.latitude}," + "${this.locationResult.latLng.longitude}";
       }
-    }).catchError((error) {
-      print(error);
-    });
+
+      final response = await http.get(endpoint);
+
+      if (response.statusCode != 200) {
+        throw Error();
+      }
+
+      final responseJson = jsonDecode(response.body);
+
+      if (responseJson['predictions'] == null) {
+        throw Error();
+      }
+
+      List<dynamic> predictions = responseJson['predictions'];
+
+      List<RichSuggestion> suggestions = [];
+
+      if (predictions.isEmpty) {
+        AutoCompleteItem aci = AutoCompleteItem();
+        aci.text = "No result found";
+        aci.offset = 0;
+        aci.length = 0;
+
+        suggestions.add(RichSuggestion(aci, () {}));
+      } else {
+        for (dynamic t in predictions) {
+          final aci = AutoCompleteItem()
+            ..id = t['place_id']
+            ..text = t['description']
+            ..offset = t['matched_substrings'][0]['offset']
+            ..length = t['matched_substrings'][0]['length'];
+
+          suggestions.add(RichSuggestion(aci, () {
+            FocusScope.of(context).requestFocus(FocusNode());
+            decodeAndSelectPlace(aci.id);
+          }));
+        }
+      }
+
+      displayAutoCompleteSuggestions(suggestions);
+    } catch (e) {
+      print(e);
+    }
   }
 
   /// To navigate to the selected place from the autocomplete list to the map,
   /// the lat,lng is required. This method fetches the lat,lng of the place and
   /// proceeds to moving the map to that location.
-  void decodeAndSelectPlace(String placeId) {
+  void decodeAndSelectPlace(String placeId) async {
     clearOverlay();
 
-    String endpoint =
-        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
-            "&placeid=$placeId";
+    try {
+      final response = await http
+          .get("https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" + "&placeid=$placeId");
 
-    http.get(endpoint).then((response) {
-      if (response.statusCode == 200) {
-        Map<String, dynamic> location =
-            jsonDecode(response.body)['result']['geometry']['location'];
-
-        LatLng latLng = LatLng(location['lat'], location['lng']);
-
-        moveToLocation(latLng);
+      if (response.statusCode != 200) {
+        throw Error();
       }
-    }).catchError((error) {
-      print(error);
-    });
+
+      final responseJson = jsonDecode(response.body);
+
+      if (responseJson['result'] == null) {
+        throw Error();
+      }
+
+      final location = responseJson['geometry']['location'];
+      moveToLocation(LatLng(location['lat'], location['lng']));
+    } catch (e) {
+      print(e);
+    }
   }
 
   /// Display autocomplete suggestions with the overlay.
@@ -390,8 +361,7 @@ class PlacePickerState extends State<PlacePicker> {
     final RenderBox renderBox = context.findRenderObject();
     Size size = renderBox.size;
 
-    final RenderBox appBarBox =
-        this.appBarKey.currentContext.findRenderObject();
+    final RenderBox appBarBox = this.appBarKey.currentContext.findRenderObject();
 
     clearOverlay();
 
@@ -399,12 +369,7 @@ class PlacePickerState extends State<PlacePicker> {
       builder: (context) => Positioned(
         width: size.width,
         top: appBarBox.size.height,
-        child: Material(
-          elevation: 1,
-          child: Column(
-            children: suggestions,
-          ),
-        ),
+        child: Material(elevation: 1, child: Column(children: suggestions)),
       ),
     );
 
@@ -422,8 +387,7 @@ class PlacePickerState extends State<PlacePicker> {
     }
 
     for (NearbyPlace np in this.nearbyPlaces) {
-      if (np.latLng == this.locationResult.latLng &&
-          np.name != this.locationResult.locality) {
+      if (np.latLng == this.locationResult.latLng && np.name != this.locationResult.locality) {
         this.locationResult.name = np.name;
         return "${np.name}, ${this.locationResult.locality}";
       }
@@ -437,39 +401,36 @@ class PlacePickerState extends State<PlacePicker> {
     // markers.clear();
     setState(() {
       markers.clear();
-      markers.add(
-        Marker(
-          markerId: MarkerId("selected-location"),
-          position: latLng,
-        ),
-      );
+      markers.add(Marker(markerId: MarkerId("selected-location"), position: latLng));
     });
   }
 
   /// Fetches and updates the nearby places to the provided lat,lng
-  void getNearbyPlaces(LatLng latLng) {
-    http
-        .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "key=${widget.apiKey}&" +
-            "location=${latLng.latitude},${latLng.longitude}&radius=150")
-        .then((response) {
-      if (response.statusCode == 200) {
-        this.nearbyPlaces.clear();
-        for (Map<String, dynamic> item
-            in jsonDecode(response.body)['results']) {
-          NearbyPlace nearbyPlace = NearbyPlace();
+  void getNearbyPlaces(LatLng latLng) async {
+    try {
+      final response = await http.get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+          "key=${widget.apiKey}&" +
+          "location=${latLng.latitude},${latLng.longitude}&radius=150");
 
-          nearbyPlace.name = item['name'];
-          nearbyPlace.icon = item['icon'];
-          double latitude = item['geometry']['location']['lat'];
-          double longitude = item['geometry']['location']['lng'];
+      if (response.statusCode != 200) {
+        throw Error();
+      }
 
-          LatLng _latLng = LatLng(latitude, longitude);
+      final responseJson = jsonDecode(response.body);
 
-          nearbyPlace.latLng = _latLng;
+      if (responseJson['results'] == null) {
+        throw Error();
+      }
 
-          this.nearbyPlaces.add(nearbyPlace);
-        }
+      this.nearbyPlaces.clear();
+
+      for (Map<String, dynamic> item in responseJson['results']) {
+        final nearbyPlace = NearbyPlace()
+          ..name = item['name']
+          ..icon = item['icon']
+          ..latLng = LatLng(item['geometry']['location']['lat'], item['geometry']['location']['lng']);
+
+        this.nearbyPlaces.add(nearbyPlace);
       }
 
       // to update the nearby places
@@ -477,46 +438,49 @@ class PlacePickerState extends State<PlacePicker> {
         // this is to require the result to show
         this.hasSearchTerm = false;
       });
-    }).catchError((error) {});
+    } catch (e) {
+      //
+    }
   }
 
   /// This method gets the human readable name of the location. Mostly appears
   /// to be the road name and the locality.
-  void reverseGeocodeLatLng(LatLng latLng) {
-    http
-        .get("https://maps.googleapis.com/maps/api/geocode/json?" +
-            "latlng=${latLng.latitude},${latLng.longitude}&" +
-            "key=${widget.apiKey}")
-        .then((response) {
-      if (response.statusCode == 200) {
-        Map<String, dynamic> responseJson = jsonDecode(response.body);
+  void reverseGeocodeLatLng(LatLng latLng) async {
+    try {
+      final response = await http.get("https://maps.googleapis.com/maps/api/geocode/json?" +
+          "latlng=${latLng.latitude},${latLng.longitude}&" +
+          "key=${widget.apiKey}");
 
-        final result = responseJson['results'][0];
-
-        String road = result['address_components'][0]['short_name'];
-        String locality = result['address_components'][1]['short_name'];
-
-        setState(() {
-          this.locationResult = LocationResult();
-          this.locationResult.name = road;
-          this.locationResult.locality = locality;
-          this.locationResult.latLng = latLng;
-          this.locationResult.formattedAddress = result['formatted_address'];
-          this.locationResult.placeId = result['place_id'];
-
-          this.locationResult.postalCode = result['address_components'][7]['short_name'];
-          this.locationResult.country = AddressComponent(result['address_components'][6]['long_name'], result['address_components'][6]['short_name'],);
-          this.locationResult.administrativeAreaLevel1 = AddressComponent(result['address_components'][5]['long_name'], result['address_components'][5]['short_name'],);
-          this.locationResult.administrativeAreaLevel2 = AddressComponent(result['address_components'][4]['long_name'], result['address_components'][4]['short_name'],);
-          this.locationResult.city = AddressComponent(result['address_components'][3]['long_name'], result['address_components'][3]['short_name'],);
-          this.locationResult.subLocalityLevel1 = AddressComponent(result['address_components'][2]['long_name'], result['address_components'][2]['short_name'],);
-          this.locationResult.subLocalityLevel2 = AddressComponent(result['address_components'][1]['long_name'], result['address_components'][1]['short_name'],);
-
-        });
+      if (response.statusCode != 200) {
+        throw Error();
       }
-    }).catchError((error) {
-      print(error);
-    });
+
+      final responseJson = jsonDecode(response.body);
+
+      if (responseJson['results'] == null) {
+        throw Error();
+      }
+
+      final result = responseJson['results'][0];
+
+      setState(() {
+        this.locationResult = LocationResult()
+          ..name = result['address_components'][0]['short_name']
+          ..locality = result['address_components'][1]['short_name']
+          ..latLng = latLng
+          ..formattedAddress = result['formatted_address']
+          ..placeId = result['place_id']
+          ..postalCode = result['address_components'][7]['short_name']
+          ..country = AddressComponent.fromJson(result['address_components'][6])
+          ..administrativeAreaLevel1 = AddressComponent.fromJson(result['address_components'][5])
+          ..administrativeAreaLevel2 = AddressComponent.fromJson(result['address_components'][4])
+          ..city = AddressComponent.fromJson(result['address_components'][3])
+          ..subLocalityLevel1 = AddressComponent.fromJson(result['address_components'][2])
+          ..subLocalityLevel2 = AddressComponent.fromJson(result['address_components'][1]);
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 
   /// Moves the camera to the provided location and updates other UI features to
@@ -524,12 +488,7 @@ class PlacePickerState extends State<PlacePicker> {
   void moveToLocation(LatLng latLng) {
     this.mapController.future.then((controller) {
       controller.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: latLng,
-            zoom: 15.0,
-          ),
-        ),
+        CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 15.0)),
       );
     });
 
@@ -546,8 +505,7 @@ class PlacePickerState extends State<PlacePicker> {
       return;
     }
 
-    var location = Location();
-    location.getLocation().then((locationData) {
+    Location().getLocation().then((locationData) {
       LatLng target = LatLng(locationData.latitude, locationData.longitude);
       moveToLocation(target);
     }).catchError((error) {
@@ -564,9 +522,7 @@ class SearchInput extends StatefulWidget {
   SearchInput(this.onSearchInput);
 
   @override
-  State<StatefulWidget> createState() {
-    return SearchInputState();
-  }
+  State<StatefulWidget> createState() => SearchInputState();
 }
 
 class SearchInputState extends State<SearchInput> {
@@ -611,24 +567,14 @@ class SearchInputState extends State<SearchInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 8,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: <Widget>[
-          Icon(
-            Icons.search,
-            color: Theme.of(context).textTheme.body1.color,
-          ),
-          SizedBox(
-            width: 8,
-          ),
+          Icon(Icons.search, color: Theme.of(context).textTheme.body1.color),
+          SizedBox(width: 8),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search place",
-                border: InputBorder.none,
-              ),
+              decoration: InputDecoration(hintText: "Search place", border: InputBorder.none),
               controller: this.editController,
               onChanged: (value) {
                 setState(() {
@@ -637,22 +583,17 @@ class SearchInputState extends State<SearchInput> {
               },
             ),
           ),
-          SizedBox(
-            width: 8,
-          ),
-          this.hasSearchEntry
-              ? GestureDetector(
-                  child: Icon(
-                    Icons.clear,
-                  ),
-                  onTap: () {
-                    this.editController.clear();
-                    setState(() {
-                      this.hasSearchEntry = false;
-                    });
-                  },
-                )
-              : SizedBox(),
+          SizedBox(width: 8),
+          if (this.hasSearchEntry)
+            GestureDetector(
+              child: Icon(Icons.clear),
+              onTap: () {
+                this.editController.clear();
+                setState(() {
+                  this.hasSearchEntry = false;
+                });
+              },
+            ),
         ],
       ),
       decoration: BoxDecoration(
@@ -673,39 +614,21 @@ class SelectPlaceAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       child: InkWell(
-        onTap: () {
-          this.onTap();
-        },
+        onTap: onTap,
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 16,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: <Widget>[
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      locationName,
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      "Tap to select this location",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 15,
-                      ),
-                    ),
+                    Text(locationName, style: TextStyle(fontSize: 16)),
+                    Text("Tap to select this location", style: TextStyle(color: Colors.grey, fontSize: 15)),
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward,
-              )
+              Icon(Icons.arrow_forward)
             ],
           ),
         ),
@@ -726,29 +649,15 @@ class NearbyPlaceItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 16,
-            ),
-            child: Row(
-              children: <Widget>[
-                Image.network(
-                  nearbyPlace.icon,
-                  width: 16,
-                ),
-                SizedBox(
-                  width: 24,
-                ),
-                Expanded(
-                  child: Text(
-                    "${nearbyPlace.name}",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                )
-              ],
-            )),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            children: <Widget>[
+              Image.network(nearbyPlace.icon, width: 16),
+              SizedBox(width: 24),
+              Expanded(child: Text("${nearbyPlace.name}", style: TextStyle(fontSize: 16)))
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -765,66 +674,31 @@ class RichSuggestion extends StatelessWidget {
     return Material(
       child: InkWell(
         child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 16,
-            ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(children: getStyledTexts(context)),
-                  ),
-                )
-              ],
-            )),
-        onTap: this.onTap,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: RichText(text: TextSpan(children: getStyledTexts(context))),
+        ),
+        onTap: onTap,
       ),
     );
   }
 
   List<TextSpan> getStyledTexts(BuildContext context) {
     final List<TextSpan> result = [];
+    final style = TextStyle(color: Colors.grey, fontSize: 15);
 
-    String startText =
-        this.autoCompleteItem.text.substring(0, this.autoCompleteItem.offset);
+    final startText = autoCompleteItem.text.substring(0, autoCompleteItem.offset);
     if (startText.isNotEmpty) {
-      result.add(
-        TextSpan(
-          text: startText,
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 15,
-          ),
-        ),
-      );
+      result.add(TextSpan(text: startText, style: style));
     }
 
-    String boldText = this.autoCompleteItem.text.substring(
-        this.autoCompleteItem.offset,
-        this.autoCompleteItem.offset + this.autoCompleteItem.length);
-
-    result.add(TextSpan(
-      text: boldText,
-      style: TextStyle(
-        fontSize: 15,
-        color: Theme.of(context).textTheme.body1.color,
-      ),
-    ));
-
-    String remainingText = this
-        .autoCompleteItem
-        .text
-        .substring(this.autoCompleteItem.offset + this.autoCompleteItem.length);
+    final boldText =
+        autoCompleteItem.text.substring(autoCompleteItem.offset, autoCompleteItem.offset + autoCompleteItem.length);
     result.add(
-      TextSpan(
-        text: remainingText,
-        style: TextStyle(
-          color: Colors.grey,
-          fontSize: 15,
-        ),
-      ),
+      TextSpan(text: boldText, style: style.copyWith(color: Theme.of(context).textTheme.body1.color)),
     );
+
+    final remainingText = autoCompleteItem.text.substring(autoCompleteItem.offset + autoCompleteItem.length);
+    result.add(TextSpan(text: remainingText, style: style));
 
     return result;
   }
