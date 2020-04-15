@@ -1,3 +1,6 @@
+## [0.9.13] - 15 Apr 2020
+Code clean up. Refactor.
+
 ## [0.9.12] - 12 Apr 2020
 Update instructions for installation
 
