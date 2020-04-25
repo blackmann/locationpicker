@@ -275,7 +275,7 @@ class PlacePickerState extends State<PlacePicker> {
         throw Error();
       }
 
-      final location = responseJson['geometry']['location'];
+      final location = responseJson['result']['geometry']['location'];
       moveToLocation(LatLng(location['lat'], location['lng']));
     } catch (e) {
       print(e);
