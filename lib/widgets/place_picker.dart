@@ -368,47 +368,6 @@ class PlacePickerState extends State<PlacePicker> {
     });
   }
 
-  /// Fetches and updates the nearby places to the provided lat,lng
-  void getNearbyPlaces(LatLng latLng) async {
-    try {
-      final url = Uri.parse(
-          "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
-          "key=${widget.apiKey}&location=${latLng.latitude},${latLng.longitude}"
-          "&radius=150&language=${widget.localizationItem.languageCode}");
-
-      final response = await http.get(url);
-
-      if (response.statusCode != 200) {
-        throw Error();
-      }
-
-      final responseJson = jsonDecode(response.body);
-
-      if (responseJson['results'] == null) {
-        throw Error();
-      }
-
-      this.nearbyPlaces.clear();
-
-      for (Map<String, dynamic> item in responseJson['results']) {
-        final nearbyPlace = NearbyPlace()
-          ..name = item['name']
-          ..icon = item['icon']
-          ..latLng = LatLng(item['geometry']['location']['lat'],
-              item['geometry']['location']['lng']);
-
-        this.nearbyPlaces.add(nearbyPlace);
-      }
-
-      // to update the nearby places
-      setState(() {
-        // this is to require the result to show
-        this.hasSearchTerm = false;
-      });
-    } catch (e) {
-      //
-    }
-  }
 
   /// This method gets the human readable name of the location. Mostly appears
   /// to be the road name and the locality.
@@ -525,8 +484,6 @@ class PlacePickerState extends State<PlacePicker> {
     setMarker(latLng);
 
     reverseGeocodeLatLng(latLng);
-
-    getNearbyPlaces(latLng);
   }
 
   void moveToCurrentUserLocation() {
