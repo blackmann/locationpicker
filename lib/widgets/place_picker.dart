@@ -119,36 +119,11 @@ class PlacePickerState extends State<PlacePicker> {
               markers: markers,
             ),
           ),
-          if (!this.hasSearchTerm)
-            !widget.displayNearbyPlaces
-            ? SelectPlaceAction(getLocationName(), () {
-              Navigator.of(context).pop(this.locationResult);
-            })
-            : Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SelectPlaceAction(
-                      getLocationName(),
-                      () => Navigator.of(context).pop(this.locationResult),
-                      widget.localizationItem.tapToSelectLocation),
-                  Divider(height: 8),
-                  Padding(
-                    child: Text(widget.localizationItem.nearBy,
-                        style: TextStyle(fontSize: 16)),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      children: nearbyPlaces
-                          .map((it) => NearbyPlaceItem(
-                              it, () => moveToLocation(it.latLng)))
-                          .toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          SelectPlaceAction(
+            getLocationName(),
+            () => Navigator.of(context).pop(this.locationResult),
+            widget.localizationItem.tapToSelectLocation
+          ),
         ],
       ),
     );

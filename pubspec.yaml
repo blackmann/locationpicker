@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.0
-  google_maps_flutter: ^0.5.21+12
+  google_maps_flutter: ^2.1.1
   location:
     git:
       url: https://github.com/Sensibo/flutterlocation.git
