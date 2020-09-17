@@ -390,19 +390,70 @@ class PlacePickerState extends State<PlacePicker> {
       final result = responseJson['results'][0];
 
       setState(() {
+        String name, locality, postalCode, country, administrativeAreaLevel1, administrativeAreaLevel2, city, subLocalityLevel1, subLocalityLevel2;
+        bool isOnStreet = false;
+        if (result['address_components'] is List<dynamic> && result['address_components'].length != null && result['address_components'].length > 0){
+          for (var i = 0; i < result['address_components'].length; i++){
+            var tmp = result['address_components'][i];
+            var types = tmp["types"] as List<dynamic>;
+            var shortName = tmp['short_name'];
+            if (types == null) {
+              continue;
+            }
+            if (i == 0) {
+              // [street_number]
+              name = shortName;
+              isOnStreet = types.contains('street_number');
+              // other index 0 types
+              // [establishment, point_of_interest, subway_station, transit_station]
+              // [premise]
+              // [route]
+            }
+            else if (i == 1 && isOnStreet) {
+              if (types.contains('route')) {
+                name += ", $shortName";
+              }
+            }
+            else {
+              if (types.contains("sublocality_level_1")){
+                subLocalityLevel1 = shortName;
+              }
+              else if (types.contains("sublocality_level_2")){
+                subLocalityLevel2 = shortName;
+              }
+              else if (types.contains("locality")){
+                locality = shortName;
+              }
+              else if (types.contains("administrative_area_level_2")){
+                administrativeAreaLevel2 = shortName;
+              }
+              else if (types.contains("administrative_area_level_1")){
+                administrativeAreaLevel1 = shortName;
+              }
+              else if (types.contains("country")){
+                country = shortName;
+              }
+              else if (types.contains('postal_code')){
+                postalCode = shortName;
+              }
+            }
+          }
+        }
+        locality = locality ?? administrativeAreaLevel1;
+        city = locality;
         this.locationResult = LocationResult()
-          ..name = result['address_components'][0]['short_name']
-          ..locality = result['address_components'][1]['short_name']
+          ..name = name
+          ..locality = locality
           ..latLng = latLng
           ..formattedAddress = result['formatted_address']
           ..placeId = result['place_id']
-          ..postalCode = result['address_components'][7]['short_name']
-          ..country = AddressComponent.fromJson(result['address_components'][6])
-          ..administrativeAreaLevel1 = AddressComponent.fromJson(result['address_components'][5])
-          ..administrativeAreaLevel2 = AddressComponent.fromJson(result['address_components'][4])
-          ..city = AddressComponent.fromJson(result['address_components'][3])
-          ..subLocalityLevel1 = AddressComponent.fromJson(result['address_components'][2])
-          ..subLocalityLevel2 = AddressComponent.fromJson(result['address_components'][1]);
+          ..postalCode = postalCode
+          ..country = AddressComponent(name: country, shortName: country)
+          ..administrativeAreaLevel1 = AddressComponent(name: administrativeAreaLevel1, shortName: administrativeAreaLevel1)
+          ..administrativeAreaLevel2 = AddressComponent(name: administrativeAreaLevel2, shortName: administrativeAreaLevel2)
+          ..city = AddressComponent(name: city, shortName: city)
+          ..subLocalityLevel1 = AddressComponent(name: subLocalityLevel1, shortName: subLocalityLevel1)
+          ..subLocalityLevel2 = AddressComponent(name: subLocalityLevel2, shortName: subLocalityLevel2);
       });
     } catch (e) {
       print(e);
