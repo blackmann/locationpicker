@@ -1,3 +1,6 @@
+## [0.9.15] - 17 Sep 2020
+Merge geocode reverse fix. (I reset my PC, .14 is jumped)
+
 ## [0.9.13] - 15 Apr 2020
 Code clean up. Refactor.
 
@@ -41,7 +44,7 @@ Working on library health.
 
 Fixed issue with delayed call to searchPlace
 
-`searchPlace` was being called (sometimes) after the widget has unmounted.  
+`searchPlace` was being called (sometimes) after the widget has unmounted.
 This could have been due to some delay caused by the debouncer proceeding after
 the widget has unmounted
 
