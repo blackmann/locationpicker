@@ -1,3 +1,6 @@
+## [0.9.16] - 2 Nov 2020
+Bump google_maps_flutter version up
+
 ## [0.9.15] - 17 Sep 2020
 Merge geocode reverse fix. (I reset my PC, .14 is jumped)
 
