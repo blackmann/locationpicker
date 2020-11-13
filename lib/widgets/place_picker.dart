@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:place_picker/entities/entities.dart';
+import 'package:place_picker/entities/localization_item.dart';
 import 'package:place_picker/widgets/widgets.dart';
 
 import '../uuid.dart';
@@ -24,8 +25,13 @@ class PlacePicker extends StatefulWidget {
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
   final LatLng displayLocation;
+  LocalizationItem localizationItem;
 
-  PlacePicker(this.apiKey, {this.displayLocation});
+  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
+    if (this.localizationItem == null) {
+      this.localizationItem = new LocalizationItem();
+    }
+  }
 
   @override
   State<StatefulWidget> createState() => PlacePickerState();
@@ -118,12 +124,14 @@ class PlacePickerState extends State<PlacePicker> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SelectPlaceAction(getLocationName(),
-                      () => Navigator.of(context).pop(this.locationResult)),
+                  SelectPlaceAction(
+                      getLocationName(),
+                      () => Navigator.of(context).pop(this.locationResult),
+                      widget.localizationItem.tapToSelectLocation),
                   Divider(height: 8),
                   Padding(
-                    child:
-                        Text("Nearby Places", style: TextStyle(fontSize: 16)),
+                    child: Text(widget.localizationItem.nearBy,
+                        style: TextStyle(fontSize: 16)),
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   ),
                   Expanded(
@@ -199,7 +207,7 @@ class PlacePickerState extends State<PlacePicker> {
                     child: CircularProgressIndicator(strokeWidth: 3)),
                 SizedBox(width: 24),
                 Expanded(
-                    child: Text("Finding place...",
+                    child: Text(widget.localizationItem.findingPlace,
                         style: TextStyle(fontSize: 16)))
               ],
             ),
@@ -221,6 +229,7 @@ class PlacePickerState extends State<PlacePicker> {
       var endpoint =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
               "key=${widget.apiKey}&" +
+              "language=${widget.localizationItem.languageCode}&" +
               "input={$place}&sessiontoken=${this.sessionToken}";
       if (this.locationResult != null) {
         endpoint += "&location=${this.locationResult.latLng.latitude}," +
@@ -245,7 +254,7 @@ class PlacePickerState extends State<PlacePicker> {
 
       if (predictions.isEmpty) {
         AutoCompleteItem aci = AutoCompleteItem();
-        aci.text = "No result found";
+        aci.text = widget.localizationItem.noResultsFound;
         aci.offset = 0;
         aci.length = 0;
 
@@ -279,8 +288,9 @@ class PlacePickerState extends State<PlacePicker> {
 
     try {
       final response = await http.get(
-          "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
-              "&placeid=$placeId");
+          "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}&" +
+              "language=${widget.localizationItem.languageCode}&" +
+              "placeid=$placeId");
 
       if (response.statusCode != 200) {
         throw Error();
@@ -327,7 +337,7 @@ class PlacePickerState extends State<PlacePicker> {
   /// then the road name returned is used instead.
   String getLocationName() {
     if (this.locationResult == null) {
-      return "Unnamed location";
+      return widget.localizationItem.unnamedLocation;
     }
 
     for (NearbyPlace np in this.nearbyPlaces) {
@@ -357,7 +367,7 @@ class PlacePickerState extends State<PlacePicker> {
       final response = await http.get(
           "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
               "key=${widget.apiKey}&" +
-              "location=${latLng.latitude},${latLng.longitude}&radius=150");
+              "location=${latLng.latitude},${latLng.longitude}&radius=150&language=${widget.localizationItem.languageCode}");
 
       if (response.statusCode != 200) {
         throw Error();
@@ -395,10 +405,11 @@ class PlacePickerState extends State<PlacePicker> {
   /// to be the road name and the locality.
   void reverseGeocodeLatLng(LatLng latLng) async {
     try {
-      final response = await http.get(
-          "https://maps.googleapis.com/maps/api/geocode/json?" +
+      final response =
+          await http.get("https://maps.googleapis.com/maps/api/geocode/json?" +
               "latlng=${latLng.latitude},${latLng.longitude}&" +
-              "key=${widget.apiKey}");
+              "language=${widget.localizationItem.languageCode}&"
+                  "key=${widget.apiKey}");
 
       if (response.statusCode != 200) {
         throw Error();

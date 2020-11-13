@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 class SelectPlaceAction extends StatelessWidget {
   final String locationName;
+  final String tapToSelectActionText;
   final VoidCallback onTap;
 
-  SelectPlaceAction(this.locationName, this.onTap);
+  SelectPlaceAction(this.locationName, this.onTap, this.tapToSelectActionText);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class SelectPlaceAction extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(locationName, style: TextStyle(fontSize: 16)),
-                    Text("Tap to select this location", style: TextStyle(color: Colors.grey, fontSize: 15)),
+                    Text(this.tapToSelectActionText, style: TextStyle(color: Colors.grey, fontSize: 15)),
                   ],
                 ),
               ),
