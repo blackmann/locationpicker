@@ -1,3 +1,6 @@
+## [0.9.17] - 2 Nov 2020
+Added custom localization support
+
 ## [0.9.16] - 2 Nov 2020
 Bump google_maps_flutter version up
 
