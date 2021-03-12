@@ -1,3 +1,6 @@
+## [0.9.18] - 2 Nov 2020
+Upgraded http package
+
 ## [0.9.17] - 2 Nov 2020
 Added custom localization support
 

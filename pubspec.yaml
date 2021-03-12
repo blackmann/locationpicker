@@ -1,6 +1,6 @@
 name: place_picker
 description: Place picker fully written in dart for Flutter. Comes with autocomplete suggestions and nearby locations list. Localization too.
-version: 0.9.17
+version: 0.9.18
 homepage: https://github.com/blackmann/locationpicker
 
 environment:
@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.12.0+2
+  http: ^0.13.0
   google_maps_flutter: ^1.0.5
   location: ^2.3.5
 
