@@ -5,6 +5,7 @@ class LocalizationItem {
   String noResultsFound;
   String unnamedLocation;
   String tapToSelectLocation;
+  String searchPlace;
 
 
   LocalizationItem({
@@ -14,5 +15,6 @@ class LocalizationItem {
     this.noResultsFound = 'No results found',
     this.unnamedLocation = 'Unnamed location',
     this.tapToSelectLocation = 'Tap to select this location',
+    this.searchPlace = 'Search place'
   });
 }

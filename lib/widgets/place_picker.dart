@@ -96,7 +96,7 @@ class PlacePickerState extends State<PlacePicker> {
     return Scaffold(
       appBar: AppBar(
         key: this.appBarKey,
-        title: SearchInput(searchPlace),
+        title: SearchInput(searchPlace, widget.localizationItem.searchPlace),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),

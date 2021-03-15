@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 /// Custom Search input field, showing the search and clear icons.
 class SearchInput extends StatefulWidget {
   final ValueChanged<String> onSearchInput;
-
-  SearchInput(this.onSearchInput);
+  final String hintText;
+  SearchInput(this.onSearchInput, this.hintText);
 
   @override
   State<StatefulWidget> createState() => SearchInputState();
@@ -61,7 +61,7 @@ class SearchInputState extends State<SearchInput> {
           SizedBox(width: 8),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(hintText: "Search place", border: InputBorder.none),
+              decoration: InputDecoration(hintText: widget.hintText, border: InputBorder.none),
               controller: this.editController,
               onChanged: (value) {
                 setState(() {
