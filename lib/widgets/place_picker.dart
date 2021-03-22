@@ -24,8 +24,8 @@ class PlacePicker extends StatefulWidget {
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
-  final LatLng displayLocation;
-  LocalizationItem localizationItem;
+  final LatLng? displayLocation;
+  LocalizationItem? localizationItem;
 
   PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
     if (this.localizationItem == null) {
@@ -45,12 +45,12 @@ class PlacePickerState extends State<PlacePicker> {
   final Set<Marker> markers = Set();
 
   /// Result returned after user completes selection
-  LocationResult locationResult;
+  LocationResult? locationResult;
 
   /// Overlay to display autocomplete suggestions
-  OverlayEntry overlayEntry;
+  OverlayEntry? overlayEntry;
 
-  List<NearbyPlace> nearbyPlaces = List();
+  List<NearbyPlace> nearbyPlaces = [];
 
   /// Session token required for autocomplete API call
   String sessionToken = Uuid().generateV4();
@@ -126,10 +126,10 @@ class PlacePickerState extends State<PlacePicker> {
                   SelectPlaceAction(
                       getLocationName(),
                       () => Navigator.of(context).pop(this.locationResult),
-                      widget.localizationItem.tapToSelectLocation),
+                      widget.localizationItem!.tapToSelectLocation),
                   Divider(height: 8),
                   Padding(
-                    child: Text(widget.localizationItem.nearBy,
+                    child: Text(widget.localizationItem!.nearBy,
                         style: TextStyle(fontSize: 16)),
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   ),
@@ -137,7 +137,7 @@ class PlacePickerState extends State<PlacePicker> {
                     child: ListView(
                       children: nearbyPlaces
                           .map((it) => NearbyPlaceItem(
-                              it, () => moveToLocation(it.latLng)))
+                              it, () => moveToLocation(it.latLng!)))
                           .toList(),
                     ),
                   ),
@@ -152,7 +152,7 @@ class PlacePickerState extends State<PlacePicker> {
   /// Hides the autocomplete overlay
   void clearOverlay() {
     if (this.overlayEntry != null) {
-      this.overlayEntry.remove();
+      this.overlayEntry!.remove();
       this.overlayEntry = null;
     }
   }
@@ -184,15 +184,15 @@ class PlacePickerState extends State<PlacePicker> {
       return;
     }
 
-    final RenderBox renderBox = context.findRenderObject();
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
 
-    final RenderBox appBarBox =
-        this.appBarKey.currentContext.findRenderObject();
+    final RenderBox? appBarBox =
+        this.appBarKey.currentContext!.findRenderObject() as RenderBox?;
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: appBarBox.size.height,
+        top: appBarBox!.size.height,
         width: size.width,
         child: Material(
           elevation: 1,
@@ -206,7 +206,7 @@ class PlacePickerState extends State<PlacePicker> {
                     child: CircularProgressIndicator(strokeWidth: 3)),
                 SizedBox(width: 24),
                 Expanded(
-                    child: Text(widget.localizationItem.findingPlace,
+                    child: Text(widget.localizationItem!.findingPlace,
                         style: TextStyle(fontSize: 16)))
               ],
             ),
@@ -215,7 +215,7 @@ class PlacePickerState extends State<PlacePicker> {
       ),
     );
 
-    Overlay.of(context).insert(this.overlayEntry);
+    Overlay.of(context)!.insert(this.overlayEntry!);
 
     autoCompleteSearch(place);
   }
@@ -228,12 +228,12 @@ class PlacePickerState extends State<PlacePicker> {
       var endpoint =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json?"
           "key=${widget.apiKey}&"
-          "language=${widget.localizationItem.languageCode}&"
+          "language=${widget.localizationItem!.languageCode}&"
           "input={$place}&sessiontoken=${this.sessionToken}";
 
       if (this.locationResult != null) {
-        endpoint += "&location=${this.locationResult.latLng.latitude}," +
-            "${this.locationResult.latLng.longitude}";
+        endpoint += "&location=${this.locationResult!.latLng!.latitude}," +
+            "${this.locationResult!.latLng!.longitude}";
       }
 
       final response = await http.get(Uri.parse(endpoint));
@@ -254,7 +254,7 @@ class PlacePickerState extends State<PlacePicker> {
 
       if (predictions.isEmpty) {
         AutoCompleteItem aci = AutoCompleteItem();
-        aci.text = widget.localizationItem.noResultsFound;
+        aci.text = widget.localizationItem!.noResultsFound;
         aci.offset = 0;
         aci.length = 0;
 
@@ -283,13 +283,13 @@ class PlacePickerState extends State<PlacePicker> {
   /// To navigate to the selected place from the autocomplete list to the map,
   /// the lat,lng is required. This method fetches the lat,lng of the place and
   /// proceeds to moving the map to that location.
-  void decodeAndSelectPlace(String placeId) async {
+  void decodeAndSelectPlace(String? placeId) async {
     clearOverlay();
 
     try {
       final url = Uri.parse(
           "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}&" +
-              "language=${widget.localizationItem.languageCode}&" +
+              "language=${widget.localizationItem!.languageCode}&" +
               "placeid=$placeId");
 
       final response = await http.get(url);
@@ -313,23 +313,23 @@ class PlacePickerState extends State<PlacePicker> {
 
   /// Display autocomplete suggestions with the overlay.
   void displayAutoCompleteSuggestions(List<RichSuggestion> suggestions) {
-    final RenderBox renderBox = context.findRenderObject();
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
     Size size = renderBox.size;
 
-    final RenderBox appBarBox =
-        this.appBarKey.currentContext.findRenderObject();
+    final RenderBox? appBarBox =
+        this.appBarKey.currentContext!.findRenderObject() as RenderBox?;
 
     clearOverlay();
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         width: size.width,
-        top: appBarBox.size.height,
+        top: appBarBox!.size.height,
         child: Material(elevation: 1, child: Column(children: suggestions)),
       ),
     );
 
-    Overlay.of(context).insert(this.overlayEntry);
+    Overlay.of(context)!.insert(this.overlayEntry!);
   }
 
   /// Utility function to get clean readable name of a location. First checks
@@ -339,18 +339,18 @@ class PlacePickerState extends State<PlacePicker> {
   /// then the road name returned is used instead.
   String getLocationName() {
     if (this.locationResult == null) {
-      return widget.localizationItem.unnamedLocation;
+      return widget.localizationItem!.unnamedLocation;
     }
 
     for (NearbyPlace np in this.nearbyPlaces) {
-      if (np.latLng == this.locationResult.latLng &&
-          np.name != this.locationResult.locality) {
-        this.locationResult.name = np.name;
-        return "${np.name}, ${this.locationResult.locality}";
+      if (np.latLng == this.locationResult!.latLng &&
+          np.name != this.locationResult!.locality) {
+        this.locationResult!.name = np.name;
+        return "${np.name}, ${this.locationResult!.locality}";
       }
     }
 
-    return "${this.locationResult.name}, ${this.locationResult.locality}";
+    return "${this.locationResult!.name}, ${this.locationResult!.locality}";
   }
 
   /// Moves the marker to the indicated lat,lng
@@ -369,7 +369,7 @@ class PlacePickerState extends State<PlacePicker> {
       final url = Uri.parse(
           "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
           "key=${widget.apiKey}&location=${latLng.latitude},${latLng.longitude}"
-          "&radius=150&language=${widget.localizationItem.languageCode}");
+          "&radius=150&language=${widget.localizationItem!.languageCode}");
 
       final response = await http.get(url);
 
@@ -411,7 +411,7 @@ class PlacePickerState extends State<PlacePicker> {
     try {
       final url = Uri.parse("https://maps.googleapis.com/maps/api/geocode/json?"
           "latlng=${latLng.latitude},${latLng.longitude}&"
-          "language=${widget.localizationItem.languageCode}&"
+          "language=${widget.localizationItem!.languageCode}&"
           "key=${widget.apiKey}");
 
       final response = await http.get(url);
@@ -429,7 +429,7 @@ class PlacePickerState extends State<PlacePicker> {
       final result = responseJson['results'][0];
 
       setState(() {
-        String name,
+        String? name,
             locality,
             postalCode,
             country,
@@ -444,7 +444,7 @@ class PlacePickerState extends State<PlacePicker> {
             result['address_components'].length > 0) {
           for (var i = 0; i < result['address_components'].length; i++) {
             var tmp = result['address_components'][i];
-            var types = tmp["types"] as List<dynamic>;
+            var types = tmp["types"] as List<dynamic>?;
             var shortName = tmp['short_name'];
             if (types == null) {
               continue;
@@ -459,7 +459,7 @@ class PlacePickerState extends State<PlacePicker> {
               // [route]
             } else if (i == 1 && isOnStreet) {
               if (types.contains('route')) {
-                name += ", $shortName";
+                name = (name ?? "") + ", $shortName";
               }
             } else {
               if (types.contains("sublocality_level_1")) {
@@ -526,12 +526,12 @@ class PlacePickerState extends State<PlacePicker> {
 
   void moveToCurrentUserLocation() {
     if (widget.displayLocation != null) {
-      moveToLocation(widget.displayLocation);
+      moveToLocation(widget.displayLocation!);
       return;
     }
 
     Location().getLocation().then((locationData) {
-      LatLng target = LatLng(locationData.latitude, locationData.longitude);
+      LatLng target = LatLng(locationData.latitude!, locationData.longitude!);
       moveToLocation(target);
     }).catchError((error) {
       // TODO: Handle the exception here
