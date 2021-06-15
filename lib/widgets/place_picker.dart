@@ -30,11 +30,16 @@ class PlacePicker extends StatefulWidget {
 
   ///SeachBar customization
   final SearchBarOptions? searchBarOptions;
+
+  ///This is used to create your own widget while as loading of autocomplete of search
+  ///
+  final Widget Function()? searchAutoCompletLoadingBuilder;
   PlacePicker(
     this.apiKey, {
     this.displayLocation,
     this.localizationItem,
     this.searchBarOptions,
+    this.searchAutoCompletLoadingBuilder,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -216,24 +221,26 @@ class PlacePickerState extends State<PlacePicker> {
         top: appBarBox!.size.height +
             (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
         width: size.width,
-        child: Material(
-          elevation: 1,
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(strokeWidth: 3)),
-                SizedBox(width: 24),
-                Expanded(
-                    child: Text(widget.localizationItem!.findingPlace,
-                        style: TextStyle(fontSize: 16)))
-              ],
-            ),
-          ),
-        ),
+        child: widget.searchAutoCompletLoadingBuilder != null
+            ? widget.searchAutoCompletLoadingBuilder!()
+            : Material(
+                elevation: 1,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  child: Row(
+                    children: <Widget>[
+                      SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3)),
+                      SizedBox(width: 24),
+                      Expanded(
+                          child: Text(widget.localizationItem!.findingPlace,
+                              style: TextStyle(fontSize: 16)))
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
 
