@@ -34,12 +34,27 @@ class PlacePicker extends StatefulWidget {
   ///This is used to create your own widget while as loading of autocomplete of search
   ///
   final Widget Function()? searchAutoCompletLoadingBuilder;
+
+  ///This is used to create your own Widget to show at the buttom of Map
+  ///
+  ///Paramters: [locationName, locationResult, nearbyPlaces, maxHeight, selectPlace]
+  ///
+  ///__maxHeight includes the height of Map as well. be carefull__
+  final Widget Function(
+    String locationName,
+    LocationResult? locationResult,
+    List<NearbyPlace> nearbyPlaces,
+    double maxHeight,
+    VoidCallback selectPlace,
+  )? bottomResultWidgetBuilder;
+
   PlacePicker(
     this.apiKey, {
     this.displayLocation,
     this.localizationItem,
     this.searchBarOptions,
     this.searchAutoCompletLoadingBuilder,
+    this.bottomResultWidgetBuilder,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -126,51 +141,73 @@ class PlacePickerState extends State<PlacePicker> {
         titleSpacing: 0,
         toolbarHeight: widget.searchBarOptions?.height,
       ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
-                zoom: 15,
-              ),
-              myLocationButtonEnabled: true,
-              myLocationEnabled: true,
-              onMapCreated: onMapCreated,
-              onTap: (latLng) {
-                clearOverlay();
-                moveToLocation(latLng);
-              },
-              markers: markers,
-            ),
-          ),
-          if (!this.hasSearchTerm)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SelectPlaceAction(
-                      getLocationName(),
-                      () => Navigator.of(context).pop(this.locationResult),
-                      widget.localizationItem!.tapToSelectLocation),
-                  Divider(height: 8),
-                  Padding(
-                    child: Text(widget.localizationItem!.nearBy,
-                        style: TextStyle(fontSize: 16)),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return Column(
+            children: <Widget>[
+              Expanded(
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
+                    zoom: 15,
                   ),
-                  Expanded(
-                    child: ListView(
-                      children: nearbyPlaces
-                          .map((it) => NearbyPlaceItem(
-                              it, () => moveToLocation(it.latLng!)))
-                          .toList(),
-                    ),
-                  ),
-                ],
+                  myLocationButtonEnabled: true,
+                  myLocationEnabled: true,
+                  onMapCreated: onMapCreated,
+                  onTap: (latLng) {
+                    clearOverlay();
+                    moveToLocation(latLng);
+                  },
+                  markers: markers,
+                ),
               ),
-            ),
-        ],
+              if (!this.hasSearchTerm)
+                SizedBox(
+                  //user can set height of the bottom result from [maxHeight] of [widget.bottomResultWidgetBilder]
+                  height: widget.bottomResultWidgetBuilder != null
+                      ? null
+                      : constraints.maxHeight / 2,
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[]
+                        ..addAll(widget.bottomResultWidgetBuilder != null
+                            ? <Widget>[
+                                widget.bottomResultWidgetBuilder!(
+                                  getLocationName(),
+                                  this.locationResult,
+                                  nearbyPlaces,
+                                  constraints.maxHeight,
+                                  () => Navigator.of(context)
+                                      .pop(this.locationResult),
+                                )
+                              ]
+                            : <Widget>[
+                                SelectPlaceAction(
+                                    getLocationName(),
+                                    () => Navigator.of(context)
+                                        .pop(this.locationResult),
+                                    widget
+                                        .localizationItem!.tapToSelectLocation),
+                                Divider(height: 8),
+                                Padding(
+                                  child: Text(widget.localizationItem!.nearBy,
+                                      style: TextStyle(fontSize: 16)),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 8),
+                                ),
+                                Expanded(
+                                  child: ListView(
+                                    children: nearbyPlaces
+                                        .map((it) => NearbyPlaceItem(it,
+                                            () => moveToLocation(it.latLng!)))
+                                        .toList(),
+                                  ),
+                                ),
+                              ])),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
