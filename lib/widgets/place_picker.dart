@@ -29,7 +29,7 @@ class PlacePicker extends StatefulWidget {
   LocalizationItem? localizationItem;
 
   ///SeachBar customization
-  SearchBarOptions? searchBarOptions;
+  final SearchBarOptions? searchBarOptions;
   PlacePicker(
     this.apiKey, {
     this.displayLocation,
