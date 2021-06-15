@@ -9,6 +9,7 @@ import 'package:place_picker/entities/entities.dart';
 import 'package:place_picker/entities/localization_item.dart';
 import 'package:place_picker/widgets/widgets.dart';
 
+import '../place_picker.dart';
 import '../uuid.dart';
 
 /// Place picker widget made with map widget from
@@ -27,7 +28,14 @@ class PlacePicker extends StatefulWidget {
   final LatLng? displayLocation;
   LocalizationItem? localizationItem;
 
-  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
+  ///SeachBar customization
+  SearchBarOptions? searchBarOptions;
+  PlacePicker(
+    this.apiKey, {
+    this.displayLocation,
+    this.localizationItem,
+    this.searchBarOptions,
+  }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -96,9 +104,22 @@ class PlacePickerState extends State<PlacePicker> {
     return Scaffold(
       appBar: AppBar(
         key: this.appBarKey,
-        title: SearchInput(searchPlace),
+        backgroundColor: widget.searchBarOptions?.backgroundColor,
+        elevation: widget.searchBarOptions?.elevation,
+        title: Padding(
+          padding: widget.searchBarOptions?.padding ??
+              EdgeInsets.symmetric(horizontal: 16),
+          child: SearchInput(
+            searchPlace,
+            searchBarOptions: widget.searchBarOptions,
+          ),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
+
+        //we use this because we now have padding
+        titleSpacing: 0,
+        toolbarHeight: widget.searchBarOptions?.height,
       ),
       body: Column(
         children: <Widget>[
@@ -192,7 +213,8 @@ class PlacePickerState extends State<PlacePicker> {
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: appBarBox!.size.height,
+        top: appBarBox!.size.height +
+            (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
         width: size.width,
         child: Material(
           elevation: 1,
@@ -324,7 +346,8 @@ class PlacePickerState extends State<PlacePicker> {
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         width: size.width,
-        top: appBarBox!.size.height,
+        top: appBarBox!.size.height +
+            (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
         child: Material(elevation: 1, child: Column(children: suggestions)),
       ),
     );
