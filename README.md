@@ -139,14 +139,14 @@ void showPlacePicker() async {
                 MediaQuery.of(context).padding.top + kToolbarHeight,
             searchIcon: Icon(
               Feather.search,
-              color: Get.theme.accentColor,
+              color: Colors.red,
             ),
             clearTextIcon: Icon(
               AntDesign.close,
-              color: Get.theme.accentColor,
+              color: Colors.red,
             ),
             inputDecoration: InputDecoration(
-              hintText: "search_place".tr,
+              hintText: "Search Place",
               border: InputBorder.none,
               hintStyle: TextStyle(),
             ),
@@ -159,29 +159,29 @@ void showPlacePicker() async {
                 // color: Colors.white,
                 ),
           ),
-          searchAutoCompletLoadingBuilder: () => Material(
-            child: SizedBox(
-              height: 50,
-              width: 50,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
-          bottomResultWidgetBuilder: (_, __, ___, h, _____) => SizedBox(
-            height: h / 4,
-          ),
-          searchAutoCompleteItemBuilder: (a, b) => GestureDetector(
-            onTap: b,
-            child: Text(
-              a.text,
-            ),
-          ),
-          searchAutoCompleteBuilder: (list) => Material(
-            elevation: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: list,
-            ),
-          ),
+          //searchAutoCompletLoadingBuilder: () => Material(
+          //  child: SizedBox(
+          //    height: 50,
+          //    width: 50,
+          //    child: Center(child: CircularProgressIndicator()),
+          //  ),
+          //),
+          //bottomResultWidgetBuilder: (_, __, ___, h, _____) => SizedBox(
+          //  height: h / 4,
+          //),
+          //searchAutoCompleteItemBuilder: (a, b) => GestureDetector(
+          // onTap: b,
+          //child: Text(
+          // a.text,
+          //  ),
+          //),
+          //searchAutoCompleteBuilder: (list) => Material(
+          //  elevation: 1,
+          //  child: Column(
+          //    crossAxisAlignment: CrossAxisAlignment.start,
+          //    children: list,
+          //  ),
+          //),
           mapOptions: MapOptions(
             myLocationButtonEnabled: true,
           ),
