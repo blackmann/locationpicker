@@ -7,6 +7,7 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:place_picker/entities/entities.dart';
 import 'package:place_picker/entities/localization_item.dart';
+import 'package:place_picker/entities/map_options.dart';
 import 'package:place_picker/widgets/widgets.dart';
 
 import '../place_picker.dart';
@@ -64,6 +65,8 @@ class PlacePicker extends StatefulWidget {
     List<Widget> itemList,
   )? searchAutoCompleteBuilder;
 
+  MapOptions? mapOptions;
+
   PlacePicker(
     this.apiKey, {
     this.displayLocation,
@@ -73,6 +76,7 @@ class PlacePicker extends StatefulWidget {
     this.bottomResultWidgetBuilder,
     this.searchAutoCompleteItemBuilder,
     this.searchAutoCompleteBuilder,
+    this.mapOptions,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -126,8 +130,11 @@ class PlacePickerState extends State<PlacePicker> {
   void initState() {
     super.initState();
     markers.add(Marker(
-      position: widget.displayLocation ?? LatLng(5.6037, 0.1870),
+      position: widget.mapOptions?.initialCameraPosition?.target ??
+          widget.displayLocation ??
+          LatLng(5.6037, 0.1870),
       markerId: MarkerId("selected-location"),
+      icon: widget.mapOptions?.markerIcon ?? BitmapDescriptor.defaultMarker,
     ));
   }
 
@@ -165,13 +172,30 @@ class PlacePickerState extends State<PlacePicker> {
             children: <Widget>[
               Expanded(
                 child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
-                    zoom: 15,
-                  ),
-                  myLocationButtonEnabled: true,
-                  myLocationEnabled: true,
+                  initialCameraPosition:
+                      widget.mapOptions?.initialCameraPosition ??
+                          CameraPosition(
+                            target: widget.displayLocation ??
+                                LatLng(5.6037, 0.1870),
+                            zoom: 15,
+                          ),
+                  myLocationButtonEnabled:
+                      widget.mapOptions?.myLocationButtonEnabled ?? true,
+                  myLocationEnabled:
+                      widget.mapOptions?.myLocationButtonEnabled ?? true,
                   onMapCreated: onMapCreated,
+                  compassEnabled: widget.mapOptions?.compassEnabled ?? true,
+                  mapToolbarEnabled:
+                      widget.mapOptions?.mapToolbarEnabled ?? true,
+                  scrollGesturesEnabled:
+                      widget.mapOptions?.scrollGestureEnabled ?? true,
+                  zoomControlsEnabled:
+                      widget.mapOptions?.zoomControllEnabled ?? true,
+                  zoomGesturesEnabled:
+                      widget.mapOptions?.zoomGestureEnabled ?? true,
+                  rotateGesturesEnabled:
+                      widget.mapOptions?.rotateGestureEnabled ?? true,
+                  mapType: widget.mapOptions?.mapType ?? MapType.normal,
                   onTap: (latLng) {
                     clearOverlay();
                     moveToLocation(latLng);
@@ -453,8 +477,11 @@ class PlacePickerState extends State<PlacePicker> {
     // markers.clear();
     setState(() {
       markers.clear();
-      markers.add(
-          Marker(markerId: MarkerId("selected-location"), position: latLng));
+      markers.add(Marker(
+          markerId: MarkerId("selected-location"),
+          position: widget.mapOptions?.initialCameraPosition?.target ?? latLng,
+          icon:
+              widget.mapOptions?.markerIcon ?? BitmapDescriptor.defaultMarker));
     });
   }
 
