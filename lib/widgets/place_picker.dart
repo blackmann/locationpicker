@@ -48,6 +48,22 @@ class PlacePicker extends StatefulWidget {
     VoidCallback selectPlace,
   )? bottomResultWidgetBuilder;
 
+  ///This is used to create your own layout for each item in auto complete while searching a place.
+  ///
+  final Widget Function(
+    AutoCompleteItem autoCompleteItem,
+    VoidCallback onTap,
+  )? searchAutoCompleteItemBuilder;
+
+  ///This is used to create your own layout for autocomplete suggestion.
+  ///each item in
+  ///`List<Widget>`
+  /// can be built using [searchAutoCompleteBuilder]
+  ///default is `Material(elevation: 1, child: Column(children: suggestions))`,
+  final Widget Function(
+    List<Widget> itemList,
+  )? searchAutoCompleteBuilder;
+
   PlacePicker(
     this.apiKey, {
     this.displayLocation,
@@ -55,6 +71,8 @@ class PlacePicker extends StatefulWidget {
     this.searchBarOptions,
     this.searchAutoCompletLoadingBuilder,
     this.bottomResultWidgetBuilder,
+    this.searchAutoCompleteItemBuilder,
+    this.searchAutoCompleteBuilder,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -324,7 +342,11 @@ class PlacePickerState extends State<PlacePicker> {
         aci.offset = 0;
         aci.length = 0;
 
-        suggestions.add(RichSuggestion(aci, () {}));
+        suggestions.add(RichSuggestion(
+          aci,
+          () {},
+          autoCompleteItemBuilder: null,
+        ));
       } else {
         for (dynamic t in predictions) {
           final aci = AutoCompleteItem()
@@ -333,10 +355,14 @@ class PlacePickerState extends State<PlacePicker> {
             ..offset = t['matched_substrings'][0]['offset']
             ..length = t['matched_substrings'][0]['length'];
 
-          suggestions.add(RichSuggestion(aci, () {
-            FocusScope.of(context).requestFocus(FocusNode());
-            decodeAndSelectPlace(aci.id);
-          }));
+          suggestions.add(RichSuggestion(
+            aci,
+            () {
+              FocusScope.of(context).requestFocus(FocusNode());
+              decodeAndSelectPlace(aci.id);
+            },
+            autoCompleteItemBuilder: widget.searchAutoCompleteItemBuilder,
+          ));
         }
       }
 
@@ -392,7 +418,9 @@ class PlacePickerState extends State<PlacePicker> {
         width: size.width,
         top: appBarBox!.size.height +
             (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
-        child: Material(elevation: 1, child: Column(children: suggestions)),
+        child: widget.searchAutoCompleteBuilder != null
+            ? widget.searchAutoCompleteBuilder!(suggestions)
+            : Material(elevation: 1, child: Column(children: suggestions)),
       ),
     );
 
