@@ -65,7 +65,11 @@ class PlacePicker extends StatefulWidget {
     List<Widget> itemList,
   )? searchAutoCompleteBuilder;
 
+  ///More map options to change
   MapOptions? mapOptions;
+
+  //custom Icon for mylocation button
+  Widget? myLocationIcon;
 
   PlacePicker(
     this.apiKey, {
@@ -77,6 +81,7 @@ class PlacePicker extends StatefulWidget {
     this.searchAutoCompleteItemBuilder,
     this.searchAutoCompleteBuilder,
     this.mapOptions,
+    this.myLocationIcon,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -110,6 +115,8 @@ class PlacePickerState extends State<PlacePicker> {
   bool hasSearchTerm = false;
 
   String previousSearchTerm = '';
+  Location _location = Location();
+  LocationData? _locationData;
 
   // constructor
   PlacePickerState();
@@ -136,6 +143,11 @@ class PlacePickerState extends State<PlacePicker> {
       markerId: MarkerId("selected-location"),
       icon: widget.mapOptions?.markerIcon ?? BitmapDescriptor.defaultMarker,
     ));
+    _location.getLocation().then((value) {
+      setState(() {
+        _locationData = value;
+      });
+    });
   }
 
   @override
@@ -166,90 +178,132 @@ class PlacePickerState extends State<PlacePicker> {
         titleSpacing: 0,
         toolbarHeight: widget.searchBarOptions?.height,
       ),
-      body: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          return Column(
-            children: <Widget>[
-              Expanded(
-                child: GoogleMap(
-                  initialCameraPosition:
-                      widget.mapOptions?.initialCameraPosition ??
-                          CameraPosition(
-                            target: widget.displayLocation ??
-                                LatLng(5.6037, 0.1870),
-                            zoom: 15,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              return Column(
+                children: <Widget>[
+                  Expanded(
+                    child: GoogleMap(
+                      initialCameraPosition:
+                          widget.mapOptions?.initialCameraPosition ??
+                              CameraPosition(
+                                target: widget.displayLocation ??
+                                    LatLng(5.6037, 0.1870),
+                                zoom: 15,
+                              ),
+                      myLocationButtonEnabled: false,
+                      myLocationEnabled: false,
+                      onMapCreated: onMapCreated,
+                      compassEnabled: widget.mapOptions?.compassEnabled ?? true,
+                      mapToolbarEnabled:
+                          widget.mapOptions?.mapToolbarEnabled ?? true,
+                      scrollGesturesEnabled:
+                          widget.mapOptions?.scrollGestureEnabled ?? true,
+                      zoomControlsEnabled:
+                          widget.mapOptions?.zoomControllEnabled ?? true,
+                      zoomGesturesEnabled:
+                          widget.mapOptions?.zoomGestureEnabled ?? true,
+                      rotateGesturesEnabled:
+                          widget.mapOptions?.rotateGestureEnabled ?? true,
+                      mapType: widget.mapOptions?.mapType ?? MapType.normal,
+                      onTap: (latLng) {
+                        clearOverlay();
+                        moveToLocation(latLng);
+                      },
+                      markers: markers,
+                    ),
+                  ),
+                  if (!this.hasSearchTerm)
+                    SizedBox(
+                      //user can set height of the bottom result from [maxHeight] of [widget.bottomResultWidgetBilder]
+                      height: widget.bottomResultWidgetBuilder != null
+                          ? null
+                          : constraints.maxHeight / 2,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[]
+                            ..addAll(widget.bottomResultWidgetBuilder != null
+                                ? <Widget>[
+                                    widget.bottomResultWidgetBuilder!(
+                                      getLocationName(),
+                                      this.locationResult,
+                                      nearbyPlaces,
+                                      constraints.maxHeight,
+                                      () => Navigator.of(context)
+                                          .pop(this.locationResult),
+                                    )
+                                  ]
+                                : <Widget>[
+                                    SelectPlaceAction(
+                                        getLocationName(),
+                                        () => Navigator.of(context)
+                                            .pop(this.locationResult),
+                                        widget.localizationItem!
+                                            .tapToSelectLocation),
+                                    Divider(height: 8),
+                                    Padding(
+                                      child: Text(
+                                          widget.localizationItem!.nearBy,
+                                          style: TextStyle(fontSize: 16)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 8),
+                                    ),
+                                    Expanded(
+                                      child: ListView(
+                                        children: nearbyPlaces
+                                            .map((it) => NearbyPlaceItem(
+                                                it,
+                                                () =>
+                                                    moveToLocation(it.latLng!)))
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ])),
+                    ),
+                ],
+              );
+            },
+          ),
+          () {
+            if (widget.mapOptions?.myLocationButtonEnabled != null &&
+                widget.mapOptions?.myLocationButtonEnabled == true) {
+              print(
+                  "User Lat,Lon: ${_locationData?.latitude}, ${_locationData?.longitude}");
+              return Positioned.directional(
+                top: 20,
+                start: 10,
+                textDirection: Directionality.of(context),
+                child: Material(
+                  elevation: 2,
+                  child: InkWell(
+                    onTap: _locationData != null
+                        ? () {
+                            // setState(() {
+                            //   _locationData = null;
+                            // });
+                            clearOverlay();
+                            moveToLocation(LatLng(_locationData!.latitude!,
+                                _locationData!.longitude!));
+                          }
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: widget.myLocationIcon ??
+                          Icon(
+                            Icons.my_location_sharp,
+                            size: 22,
                           ),
-                  myLocationButtonEnabled:
-                      widget.mapOptions?.myLocationButtonEnabled ?? true,
-                  myLocationEnabled:
-                      widget.mapOptions?.myLocationButtonEnabled ?? true,
-                  onMapCreated: onMapCreated,
-                  compassEnabled: widget.mapOptions?.compassEnabled ?? true,
-                  mapToolbarEnabled:
-                      widget.mapOptions?.mapToolbarEnabled ?? true,
-                  scrollGesturesEnabled:
-                      widget.mapOptions?.scrollGestureEnabled ?? true,
-                  zoomControlsEnabled:
-                      widget.mapOptions?.zoomControllEnabled ?? true,
-                  zoomGesturesEnabled:
-                      widget.mapOptions?.zoomGestureEnabled ?? true,
-                  rotateGesturesEnabled:
-                      widget.mapOptions?.rotateGestureEnabled ?? true,
-                  mapType: widget.mapOptions?.mapType ?? MapType.normal,
-                  onTap: (latLng) {
-                    clearOverlay();
-                    moveToLocation(latLng);
-                  },
-                  markers: markers,
+                    ),
+                  ),
                 ),
-              ),
-              if (!this.hasSearchTerm)
-                SizedBox(
-                  //user can set height of the bottom result from [maxHeight] of [widget.bottomResultWidgetBilder]
-                  height: widget.bottomResultWidgetBuilder != null
-                      ? null
-                      : constraints.maxHeight / 2,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[]
-                        ..addAll(widget.bottomResultWidgetBuilder != null
-                            ? <Widget>[
-                                widget.bottomResultWidgetBuilder!(
-                                  getLocationName(),
-                                  this.locationResult,
-                                  nearbyPlaces,
-                                  constraints.maxHeight,
-                                  () => Navigator.of(context)
-                                      .pop(this.locationResult),
-                                )
-                              ]
-                            : <Widget>[
-                                SelectPlaceAction(
-                                    getLocationName(),
-                                    () => Navigator.of(context)
-                                        .pop(this.locationResult),
-                                    widget
-                                        .localizationItem!.tapToSelectLocation),
-                                Divider(height: 8),
-                                Padding(
-                                  child: Text(widget.localizationItem!.nearBy,
-                                      style: TextStyle(fontSize: 16)),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 24, vertical: 8),
-                                ),
-                                Expanded(
-                                  child: ListView(
-                                    children: nearbyPlaces
-                                        .map((it) => NearbyPlaceItem(it,
-                                            () => moveToLocation(it.latLng!)))
-                                        .toList(),
-                                  ),
-                                ),
-                              ])),
-                ),
-            ],
-          );
-        },
+              );
+            }
+            return SizedBox();
+          }(),
+        ],
       ),
     );
   }
