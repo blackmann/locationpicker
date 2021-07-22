@@ -125,6 +125,7 @@ class PlacePickerState extends State<PlacePicker> {
                 children: <Widget>[
                   SelectPlaceAction(
                       getLocationName(),
+                      () => Navigator.of(context).pop(this.locationResult)
                       widget.localizationItem!.tapToSelectLocation),
                   Divider(height: 8),
                   Padding(
