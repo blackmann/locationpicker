@@ -1,4 +1,7 @@
-## [0.9.18] - 2 Nov 2020
+## [0.9.18-nullsafety] - 22 March 2021
+Upgrade to nullsafety
+
+## [0.9.18] - 12 March 2021
 Upgraded http package
 
 ## [0.9.17] - 2 Nov 2020

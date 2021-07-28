@@ -15,7 +15,7 @@ class SearchInput extends StatefulWidget {
 class SearchInputState extends State<SearchInput> {
   TextEditingController editController = TextEditingController();
 
-  Timer debouncer;
+  Timer? debouncer;
 
   bool hasSearchEntry = false;
 
@@ -43,7 +43,7 @@ class SearchInputState extends State<SearchInput> {
     }
 
     if (this.debouncer?.isActive ?? false) {
-      this.debouncer.cancel();
+      this.debouncer!.cancel();
     }
 
     this.debouncer = Timer(Duration(milliseconds: 500), () {
