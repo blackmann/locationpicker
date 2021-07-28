@@ -9,9 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.0
-  google_maps_flutter: ^1.0.5
-  location: ^2.3.5
+  http: ^0.13.3
+  google_maps_flutter: ^2.0.6
+  location: ^4.3.0
 
 dev_dependencies:
   flutter_test:
