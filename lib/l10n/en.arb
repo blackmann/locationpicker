@@ -1,0 +1,10 @@
+{
+  "@@locale":"en",
+  "nearBy": "Nearby Places",
+  "findingPlace": "Finding place...",
+  "noResultsFound": "No results found",
+  "unnamedLocation": "Unnamed location",
+  "tapToSelectLocation": "Tap to select this location",
+  "searchHint": "Search place",
+  "languageCode": "en"
+}

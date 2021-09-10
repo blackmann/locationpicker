@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import '../l10n/gen_l10n/place_picker_localizations.dart';
+
 class LocalizationItem {
   final String languageCode;
   final String nearBy;
@@ -16,4 +19,17 @@ class LocalizationItem {
     this.tapToSelectLocation = 'Tap to select this location',
     this.searchHint = "Search place",
   });
+  factory LocalizationItem.of(BuildContext context) {
+    var localizations = PlacePickerLocalization.of(context);
+    if (localizations == null) return LocalizationItem();
+    return LocalizationItem(
+      languageCode: localizations.languageCode,
+      nearBy: localizations.nearBy,
+      findingPlace: localizations.findingPlace,
+      noResultsFound: localizations.noResultsFound,
+      unnamedLocation: localizations.unnamedLocation,
+      tapToSelectLocation: localizations.tapToSelectLocation,
+      searchHint: localizations.searchHint,
+    );
+  }
 }

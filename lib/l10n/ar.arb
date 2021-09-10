@@ -1,0 +1,10 @@
+{
+  "@@locale":"ar",
+  "nearBy": "الأماكن القريبة",
+  "findingPlace": "البحث عن المكان...",
+  "noResultsFound": "لا يوجد نتائج",
+  "unnamedLocation": "مكان غير معروف",
+  "tapToSelectLocation": "إضغط لاختيار هذا المكان",
+  "searchHint": "عن ماذا تبحث",
+  "languageCode": "ar"
+}

@@ -135,3 +135,27 @@ void showPlacePicker() async {
     print(result);
 }
 ```
+
+
+## Localizations
+
+You can pass your own `LocalizationItem` with your own texts
+
+or you can use  `PlacePickerLocalization.delegate`
+
+```dart
+ return MaterialApp(
+   localizationsDelegates: [
+     /// ...other delegates,
+     PlacePickerLocalization.delegate
+   ],
+   home: MyApplicationHome(),
+ );
+ 
+```
+
+### Supported locales
+
+ - [x] English
+ - [x] English US
+ - [x] Arabic
