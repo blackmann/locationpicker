@@ -65,7 +65,7 @@ class SearchInputState extends State<SearchInput> {
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             child: widget.searchBarOptions?.searchIcon ??
                 Icon(Icons.search,
-                    color: Theme.of(context).textTheme.body1!.color),
+                    color: Theme.of(context).textTheme.bodyText1!.color),
           ),
           Expanded(
             child: TextField(

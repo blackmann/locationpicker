@@ -42,8 +42,8 @@ class RichSuggestion extends StatelessWidget {
     result.add(
       TextSpan(
           text: boldText,
-          style:
-              style.copyWith(color: Theme.of(context).textTheme.body1!.color)),
+          style: style.copyWith(
+              color: Theme.of(context).textTheme.bodyText1!.color)),
     );
 
     final remainingText = autoCompleteItem.text!
