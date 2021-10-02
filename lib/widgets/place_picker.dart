@@ -7,8 +7,10 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:place_picker/entities/entities.dart';
 import 'package:place_picker/entities/localization_item.dart';
+import 'package:place_picker/entities/map_options.dart';
 import 'package:place_picker/widgets/widgets.dart';
 
+import '../place_picker.dart';
 import '../uuid.dart';
 
 /// Place picker widget made with map widget from
@@ -27,7 +29,60 @@ class PlacePicker extends StatefulWidget {
   final LatLng? displayLocation;
   LocalizationItem? localizationItem;
 
-  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
+  ///SeachBar customization
+  final SearchBarOptions? searchBarOptions;
+
+  ///This is used to create your own widget while as loading of autocomplete of search
+  ///
+  final Widget Function()? searchAutoCompletLoadingBuilder;
+
+  ///This is used to create your own Widget to show at the buttom of Map
+  ///
+  ///Paramters: [locationName, locationResult, nearbyPlaces, maxHeight, selectPlace]
+  ///
+  ///__maxHeight includes the height of Map as well. be carefull__
+  final Widget Function(
+    String locationName,
+    LocationResult? locationResult,
+    List<NearbyPlace> nearbyPlaces,
+    double maxHeight,
+    VoidCallback selectPlace,
+  )? bottomResultWidgetBuilder;
+
+  ///This is used to create your own layout for each item in auto complete while searching a place.
+  ///
+  final Widget Function(
+    AutoCompleteItem autoCompleteItem,
+    VoidCallback onTap,
+  )? searchAutoCompleteItemBuilder;
+
+  ///This is used to create your own layout for autocomplete suggestion.
+  ///each item in
+  ///`List<Widget>`
+  /// can be built using [searchAutoCompleteBuilder]
+  ///default is `Material(elevation: 1, child: Column(children: suggestions))`,
+  final Widget Function(
+    List<Widget> itemList,
+  )? searchAutoCompleteBuilder;
+
+  ///More map options to change
+  MapOptions? mapOptions;
+
+  //custom Icon for mylocation button
+  Widget? myLocationIcon;
+
+  PlacePicker(
+    this.apiKey, {
+    this.displayLocation,
+    this.localizationItem,
+    this.searchBarOptions,
+    this.searchAutoCompletLoadingBuilder,
+    this.bottomResultWidgetBuilder,
+    this.searchAutoCompleteItemBuilder,
+    this.searchAutoCompleteBuilder,
+    this.mapOptions,
+    this.myLocationIcon,
+  }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -60,6 +115,8 @@ class PlacePickerState extends State<PlacePicker> {
   bool hasSearchTerm = false;
 
   String previousSearchTerm = '';
+  Location _location = Location();
+  LocationData? _locationData;
 
   // constructor
   PlacePickerState();
@@ -80,9 +137,17 @@ class PlacePickerState extends State<PlacePicker> {
   void initState() {
     super.initState();
     markers.add(Marker(
-      position: widget.displayLocation ?? LatLng(5.6037, 0.1870),
+      position: widget.mapOptions?.initialCameraPosition?.target ??
+          widget.displayLocation ??
+          LatLng(5.6037, 0.1870),
       markerId: MarkerId("selected-location"),
+      icon: widget.mapOptions?.markerIcon ?? BitmapDescriptor.defaultMarker,
     ));
+    _location.getLocation().then((value) {
+      setState(() {
+        _locationData = value;
+      });
+    });
   }
 
   @override
@@ -96,54 +161,148 @@ class PlacePickerState extends State<PlacePicker> {
     return Scaffold(
       appBar: AppBar(
         key: this.appBarKey,
-        title: SearchInput(searchPlace),
+        backgroundColor: widget.searchBarOptions?.backgroundColor,
+        elevation: widget.searchBarOptions?.elevation,
+        title: Padding(
+          padding: widget.searchBarOptions?.padding ??
+              EdgeInsets.symmetric(horizontal: 16),
+          child: SearchInput(
+            searchPlace,
+            searchBarOptions: widget.searchBarOptions,
+          ),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
+
+        //we use this because we now have padding
+        titleSpacing: 0,
+        toolbarHeight: widget.searchBarOptions?.height,
       ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.displayLocation ?? LatLng(5.6037, 0.1870),
-                zoom: 15,
-              ),
-              myLocationButtonEnabled: true,
-              myLocationEnabled: true,
-              onMapCreated: onMapCreated,
-              onTap: (latLng) {
-                clearOverlay();
-                moveToLocation(latLng);
-              },
-              markers: markers,
-            ),
-          ),
-          if (!this.hasSearchTerm)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              return Column(
                 children: <Widget>[
-                  SelectPlaceAction(
-                      getLocationName(),
-                      () => Navigator.of(context).pop(this.locationResult),
-                      widget.localizationItem!.tapToSelectLocation),
-                  Divider(height: 8),
-                  Padding(
-                    child: Text(widget.localizationItem!.nearBy,
-                        style: TextStyle(fontSize: 16)),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  ),
                   Expanded(
-                    child: ListView(
-                      children: nearbyPlaces
-                          .map((it) => NearbyPlaceItem(
-                              it, () => moveToLocation(it.latLng!)))
-                          .toList(),
+                    child: GoogleMap(
+                      initialCameraPosition:
+                          widget.mapOptions?.initialCameraPosition ??
+                              CameraPosition(
+                                target: widget.displayLocation ??
+                                    LatLng(5.6037, 0.1870),
+                                zoom: 15,
+                              ),
+                      myLocationButtonEnabled: false,
+                      myLocationEnabled: false,
+                      onMapCreated: onMapCreated,
+                      compassEnabled: widget.mapOptions?.compassEnabled ?? true,
+                      mapToolbarEnabled:
+                          widget.mapOptions?.mapToolbarEnabled ?? true,
+                      scrollGesturesEnabled:
+                          widget.mapOptions?.scrollGestureEnabled ?? true,
+                      zoomControlsEnabled:
+                          widget.mapOptions?.zoomControllEnabled ?? true,
+                      zoomGesturesEnabled:
+                          widget.mapOptions?.zoomGestureEnabled ?? true,
+                      rotateGesturesEnabled:
+                          widget.mapOptions?.rotateGestureEnabled ?? true,
+                      mapType: widget.mapOptions?.mapType ?? MapType.normal,
+                      onTap: (latLng) {
+                        clearOverlay();
+                        moveToLocation(latLng);
+                      },
+                      markers: markers,
                     ),
                   ),
+                  if (!this.hasSearchTerm)
+                    SizedBox(
+                      //user can set height of the bottom result from [maxHeight] of [widget.bottomResultWidgetBilder]
+                      height: widget.bottomResultWidgetBuilder != null
+                          ? null
+                          : constraints.maxHeight / 2,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[]
+                            ..addAll(widget.bottomResultWidgetBuilder != null
+                                ? <Widget>[
+                                    widget.bottomResultWidgetBuilder!(
+                                      getLocationName(),
+                                      this.locationResult,
+                                      nearbyPlaces,
+                                      constraints.maxHeight,
+                                      () => Navigator.of(context)
+                                          .pop(this.locationResult),
+                                    )
+                                  ]
+                                : <Widget>[
+                                    SelectPlaceAction(
+                                        getLocationName(),
+                                        () => Navigator.of(context)
+                                            .pop(this.locationResult),
+                                        widget.localizationItem!
+                                            .tapToSelectLocation),
+                                    Divider(height: 8),
+                                    Padding(
+                                      child: Text(
+                                          widget.localizationItem!.nearBy,
+                                          style: TextStyle(fontSize: 16)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 8),
+                                    ),
+                                    Expanded(
+                                      child: ListView(
+                                        children: nearbyPlaces
+                                            .map((it) => NearbyPlaceItem(
+                                                it,
+                                                () =>
+                                                    moveToLocation(it.latLng!)))
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ])),
+                    ),
                 ],
-              ),
-            ),
+              );
+            },
+          ),
+          () {
+            if (widget.mapOptions?.myLocationButtonEnabled != null &&
+                widget.mapOptions?.myLocationButtonEnabled == true) {
+              print(
+                  "User Lat,Lon: ${_locationData?.latitude}, ${_locationData?.longitude}");
+              return Positioned.directional(
+                top: 20,
+                start: 10,
+                textDirection: Directionality.of(context),
+                child: Material(
+                  elevation: 2,
+                  child: InkWell(
+                    onTap: _locationData != null
+                        ? () {
+                            // setState(() {
+                            //   _locationData = null;
+                            // });
+                            clearOverlay();
+                            moveToLocation(LatLng(_locationData!.latitude!,
+                                _locationData!.longitude!));
+                          }
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: widget.myLocationIcon ??
+                          Icon(
+                            Icons.my_location_sharp,
+                            size: 22,
+                          ),
+                    ),
+                  ),
+                ),
+              );
+            }
+            return SizedBox();
+          }(),
         ],
       ),
     );
@@ -192,26 +351,29 @@ class PlacePickerState extends State<PlacePicker> {
 
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: appBarBox!.size.height,
+        top: appBarBox!.size.height +
+            (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
         width: size.width,
-        child: Material(
-          elevation: 1,
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(strokeWidth: 3)),
-                SizedBox(width: 24),
-                Expanded(
-                    child: Text(widget.localizationItem!.findingPlace,
-                        style: TextStyle(fontSize: 16)))
-              ],
-            ),
-          ),
-        ),
+        child: widget.searchAutoCompletLoadingBuilder != null
+            ? widget.searchAutoCompletLoadingBuilder!()
+            : Material(
+                elevation: 1,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  child: Row(
+                    children: <Widget>[
+                      SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3)),
+                      SizedBox(width: 24),
+                      Expanded(
+                          child: Text(widget.localizationItem!.findingPlace,
+                              style: TextStyle(fontSize: 16)))
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
 
@@ -258,7 +420,11 @@ class PlacePickerState extends State<PlacePicker> {
         aci.offset = 0;
         aci.length = 0;
 
-        suggestions.add(RichSuggestion(aci, () {}));
+        suggestions.add(RichSuggestion(
+          aci,
+          () {},
+          autoCompleteItemBuilder: null,
+        ));
       } else {
         for (dynamic t in predictions) {
           final aci = AutoCompleteItem()
@@ -267,10 +433,14 @@ class PlacePickerState extends State<PlacePicker> {
             ..offset = t['matched_substrings'][0]['offset']
             ..length = t['matched_substrings'][0]['length'];
 
-          suggestions.add(RichSuggestion(aci, () {
-            FocusScope.of(context).requestFocus(FocusNode());
-            decodeAndSelectPlace(aci.id);
-          }));
+          suggestions.add(RichSuggestion(
+            aci,
+            () {
+              FocusScope.of(context).requestFocus(FocusNode());
+              decodeAndSelectPlace(aci.id);
+            },
+            autoCompleteItemBuilder: widget.searchAutoCompleteItemBuilder,
+          ));
         }
       }
 
@@ -324,8 +494,11 @@ class PlacePickerState extends State<PlacePicker> {
     this.overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         width: size.width,
-        top: appBarBox!.size.height,
-        child: Material(elevation: 1, child: Column(children: suggestions)),
+        top: appBarBox!.size.height +
+            (widget.searchBarOptions?.overlyTopPadding ?? 0.0),
+        child: widget.searchAutoCompleteBuilder != null
+            ? widget.searchAutoCompleteBuilder!(suggestions)
+            : Material(elevation: 1, child: Column(children: suggestions)),
       ),
     );
 
@@ -358,8 +531,11 @@ class PlacePickerState extends State<PlacePicker> {
     // markers.clear();
     setState(() {
       markers.clear();
-      markers.add(
-          Marker(markerId: MarkerId("selected-location"), position: latLng));
+      markers.add(Marker(
+          markerId: MarkerId("selected-location"),
+          position: widget.mapOptions?.initialCameraPosition?.target ?? latLng,
+          icon:
+              widget.mapOptions?.markerIcon ?? BitmapDescriptor.defaultMarker));
     });
   }
 
