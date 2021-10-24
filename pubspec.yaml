@@ -9,14 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   http: ^0.13.3
   google_maps_flutter: ^2.0.8
   location: ^4.3.0
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-  flutter_localizations:
     sdk: flutter
 
 # For information on the generic Dart part of this file, see the
