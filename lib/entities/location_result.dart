@@ -6,30 +6,30 @@ class LocationResult {
   /// The human readable name of the location. This is primarily the
   /// name of the road. But in cases where the place was selected from Nearby
   /// places list, we use the <b>name</b> provided on the list item.
-  String name; // or road
+  String? name; // or road
 
   /// The human readable locality of the location.
-  String locality;
+  String? locality;
 
   /// Latitude/Longitude of the selected location.
-  LatLng latLng;
+  LatLng? latLng;
 
   /// Formatted address suggested by Google
-  String formattedAddress;
+  String? formattedAddress;
 
-  AddressComponent country;
+  AddressComponent? country;
 
-  AddressComponent city;
+  AddressComponent? city;
 
-  AddressComponent administrativeAreaLevel1;
+  AddressComponent? administrativeAreaLevel1;
 
-  AddressComponent administrativeAreaLevel2;
+  AddressComponent? administrativeAreaLevel2;
 
-  AddressComponent subLocalityLevel1;
+  AddressComponent? subLocalityLevel1;
 
-  AddressComponent subLocalityLevel2;
+  AddressComponent? subLocalityLevel2;
 
-  String postalCode;
+  String? postalCode;
 
-  String placeId;
+  String? placeId;
 }
