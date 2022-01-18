@@ -1,3 +1,6 @@
+## [0.9.20-nullsafety] - 18 Jan 2022
+Change `body1` to `bodyText1`
+
 ## [0.9.18-nullsafety] - 22 March 2021
 Upgrade to nullsafety
 
