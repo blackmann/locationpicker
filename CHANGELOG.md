@@ -1,3 +1,6 @@
+## [0.9.19] - 18 Jan 2022
+Change `body1` to `bodyText1`
+
 ## [0.9.18] - 2 Nov 2020
 Upgraded http package
 
