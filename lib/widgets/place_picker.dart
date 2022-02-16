@@ -99,6 +99,8 @@ class PlacePickerState extends State<PlacePicker> {
         title: SearchInput(searchPlace),
         centerTitle: true,
         automaticallyImplyLeading: false,
+                  iconTheme: IconThemeData.fallback(),
+
       ),
       body: Column(
         children: <Widget>[
