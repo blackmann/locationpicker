@@ -27,7 +27,7 @@ class SelectPlaceAction extends StatelessWidget {
               ),
                TextButton(
                 onPressed: onTap,
-                child: Text('Done'),
+                child: Text('Next'),
               ),
             ],
           ),
