@@ -1,6 +1,6 @@
 class AddressComponent {
-  String name;
-  String shortName;
+  String? name;
+  String? shortName;
 
   AddressComponent({this.name, this.shortName});
 
