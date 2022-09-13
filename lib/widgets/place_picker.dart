@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:location/location.dart';
 import 'package:place_picker/entities/entities.dart';
 import 'package:place_picker/entities/localization_item.dart';
 import 'package:place_picker/widgets/widgets.dart';
@@ -81,16 +83,18 @@ class PlacePickerState extends State<PlacePicker> {
   void initState() {
     super.initState();
     if (widget.displayLocation == null) {
-      _getCurrentLocation().then((value){
+      _getCurrentLocation().then((value) {
         if (value != null) {
-         setState(() {
-           _currentLocation = value;
-         });
+          setState(() {
+            _currentLocation = value;
+          });
         } else {
+          Navigator.of(context).pop(null);
           print("getting current location null");
         }
-      }).catchError((e){
+      }).catchError((e) {
         print(e);
+        Navigator.of(context).pop(null);
       });
     } else {
       markers.add(Marker(
@@ -98,7 +102,6 @@ class PlacePickerState extends State<PlacePicker> {
         markerId: MarkerId("selected-location"),
       ));
     }
-
   }
 
   @override
@@ -119,23 +122,26 @@ class PlacePickerState extends State<PlacePicker> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: _currentLocation == null && widget.displayLocation == null ? Center(
-              child: CircularProgressIndicator(),
-            )
-            : GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.displayLocation ?? _currentLocation ?? LatLng(5.6037, 0.1870),
-                zoom: 15,
-              ),
-              myLocationButtonEnabled: true,
-              myLocationEnabled: true,
-              onMapCreated: onMapCreated,
-              onTap: (latLng) {
-                clearOverlay();
-                moveToLocation(latLng);
-              },
-              markers: markers,
-            ),
+            child: _currentLocation == null && widget.displayLocation == null
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: widget.displayLocation ??
+                          _currentLocation ??
+                          LatLng(5.6037, 0.1870),
+                      zoom: 15,
+                    ),
+                    myLocationButtonEnabled: true,
+                    myLocationEnabled: true,
+                    onMapCreated: onMapCreated,
+                    onTap: (latLng) {
+                      clearOverlay();
+                      moveToLocation(latLng);
+                    },
+                    markers: markers,
+                  ),
           ),
           if (!this.hasSearchTerm)
             Expanded(
@@ -559,38 +565,125 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   Future<LatLng> _getCurrentLocation() async {
-    try {
-      final Location location = Location();
-      bool _serviceEnabled = await location.serviceEnabled();
-      if (!_serviceEnabled) {
-        _serviceEnabled = await location.requestService();
-        if (!_serviceEnabled) {
-          print("gps service not enabled");
-          return Future.error(Exception("gps service not enabled"));
-        }
-      }
-      PermissionStatus _permissionGranted = await location.hasPermission();
-      if (PermissionStatus.denied == _permissionGranted) {
-        _permissionGranted = await location.requestPermission();
-        if (_permissionGranted != PermissionStatus.granted) {
-          print("permission not granted");
-          return Future.error(Exception("permission not granted"));
-        }
-      }
-      final locationData = await location.getLocation();
-      if (locationData.longitude != null && locationData.latitude != null) {
-        LatLng target =
-        LatLng(locationData.latitude!, locationData.longitude!);
-        //moveToLocation(target);
-        print('target:$target');
-        //return target;
-        return target;
-      } else {
-        return Future.error(Exception("location data null"));
-      }
-    } catch(e) {
-      return Future.error(e);
+    bool serviceEnabled;
+    LocationPermission permission;
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await _showLocationDisabledAlertDialog(context);
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
     }
-    throw Future.error(Exception("Error Unknown"));
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+    try {
+      final locationData = await Geolocator.getCurrentPosition(timeLimit: Duration(seconds: 30));
+      LatLng target = LatLng(locationData.latitude, locationData.longitude);
+      //moveToLocation(target);
+      print('target:$target');
+      return target;
+    } on TimeoutException catch (e) {
+      final locationData = await Geolocator.getLastKnownPosition();
+      if (locationData != null) {
+        return LatLng(locationData.latitude, locationData.longitude);
+      }  else {
+        return LatLng(10.5381264, 73.8827201);
+      }
+
+    }
   }
+
+  Future<dynamic> _showLocationDisabledAlertDialog(BuildContext context) {
+    if (Platform.isIOS) {
+      return showCupertinoDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return CupertinoAlertDialog(
+              title: Text("Location is disabled"),
+              content: Text(
+                  "To use location, go to your Settings App > Privacy > Location Services."),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text("Ok"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          });
+    } else {
+      return showDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              title: Text("Location is disabled"),
+              content: Text(
+                  "The app needs to access your location. Please enable location service."),
+              actions: [
+                TextButton(
+                  child: Text("OK"),
+                  onPressed: () async {
+                    await Geolocator.openLocationSettings();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          });
+    }
+  }
+
+// Future<LatLng> _getCurrentLocationOld() async {
+//   try {
+//     final Location location = Location();
+//     bool _serviceEnabled = await location.serviceEnabled();
+//     if (!_serviceEnabled) {
+//       _serviceEnabled = await location.requestService();
+//       if (!_serviceEnabled) {
+//         print("gps service not enabled");
+//         return Future.error(Exception("gps service not enabled"));
+//       }
+//     }
+//     PermissionStatus _permissionGranted = await location.hasPermission();
+//     if (PermissionStatus.denied == _permissionGranted) {
+//       _permissionGranted = await location.requestPermission();
+//       if (_permissionGranted != PermissionStatus.granted) {
+//         print("permission not granted");
+//         return Future.error(Exception("permission not granted"));
+//       }
+//     }
+//     final locationData = await location.getLocation();
+//     if (locationData.longitude != null && locationData.latitude != null) {
+//       LatLng target =
+//       LatLng(locationData.latitude!, locationData.longitude!);
+//       //moveToLocation(target);
+//       print('target:$target');
+//       //return target;
+//       return target;
+//     } else {
+//       return Future.error(Exception("location data null"));
+//     }
+//   } catch(e) {
+//     return Future.error(e);
+//   }
+//   throw Future.error(Exception("Error Unknown"));
+// }
 }
