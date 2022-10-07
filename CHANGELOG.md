@@ -1,3 +1,9 @@
+## [0.9.21] - 07 Oct 2022
+Dependencies updated
+Changed `location` dependency to `geolocator` for current location
+NullPointerException fix for android devices
+fixes #39 #75
+
 ## [0.9.19] - 18 Jan 2022
 Change `body1` to `bodyText1`
 
