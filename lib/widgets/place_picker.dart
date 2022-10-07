@@ -28,10 +28,15 @@ class PlacePicker extends StatefulWidget {
   /// map does not pan to the user's current location.
   final LatLng? displayLocation;
   LocalizationItem? localizationItem;
+  LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
 
-  PlacePicker(this.apiKey, {this.displayLocation, this.localizationItem}) {
+  PlacePicker(this.apiKey,
+      {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
+    }
+    if (defaultLocation != null) {
+      this.defaultLocation = defaultLocation;
     }
   }
 
@@ -43,6 +48,7 @@ class PlacePicker extends StatefulWidget {
 class PlacePickerState extends State<PlacePicker> {
   final Completer<GoogleMapController> mapController = Completer();
   LatLng? _currentLocation;
+  bool _loadMap = false;
 
   /// Indicator for the selected location
   final Set<Marker> markers = Set();
@@ -89,18 +95,31 @@ class PlacePickerState extends State<PlacePicker> {
             _currentLocation = value;
           });
         } else {
-          Navigator.of(context).pop(null);
+          //Navigator.of(context).pop(null);
           print("getting current location null");
         }
+        setState(() {
+          _loadMap = true;
+        });
       }).catchError((e) {
+        if (e is LocationServiceDisabledException) {
+          Navigator.of(context).pop(null);
+        } else {
+          setState(() {
+            _loadMap = true;
+          });
+        }
         print(e);
-        Navigator.of(context).pop(null);
+        //Navigator.of(context).pop(null);
       });
     } else {
-      markers.add(Marker(
-        position: widget.displayLocation!,
-        markerId: MarkerId("selected-location"),
-      ));
+      setState(() {
+        markers.add(Marker(
+          position: widget.displayLocation!,
+          markerId: MarkerId("selected-location"),
+        ));
+        _loadMap = true;
+      });
     }
   }
 
@@ -112,67 +131,86 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        key: this.appBarKey,
-        title: SearchInput(searchPlace),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: _currentLocation == null && widget.displayLocation == null
-                ? Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: widget.displayLocation ??
-                          _currentLocation ??
-                          LatLng(5.6037, 0.1870),
-                      zoom: 15,
-                    ),
-                    myLocationButtonEnabled: true,
-                    myLocationEnabled: true,
-                    onMapCreated: onMapCreated,
-                    onTap: (latLng) {
-                      clearOverlay();
-                      moveToLocation(latLng);
-                    },
-                    markers: markers,
-                  ),
-          ),
-          if (!this.hasSearchTerm)
+    return WillPopScope(
+      onWillPop: () {
+        if (Platform.isAndroid) {
+          locationResult = null;
+          _delayedPop();
+          return Future.value(false);
+        }  else  {
+          return Future.value(true);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          key: this.appBarKey,
+          title: SearchInput(searchPlace),
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+        ),
+        body: Column(
+          children: <Widget>[
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SelectPlaceAction(
-                      getLocationName(),
-                      () => Navigator.of(context).pop(this.locationResult),
-                      widget.localizationItem!.tapToSelectLocation),
-                  Divider(height: 8),
-                  Padding(
-                    child: Text(widget.localizationItem!.nearBy,
-                        style: TextStyle(fontSize: 16)),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      children: nearbyPlaces
-                          .map((it) => NearbyPlaceItem(it, () {
-                                if (it.latLng != null) {
-                                  moveToLocation(it.latLng!);
-                                }
-                              }))
-                          .toList(),
+              child: !_loadMap
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: widget.displayLocation ??
+                            _currentLocation ??
+                            widget.defaultLocation,
+                        zoom: _currentLocation == null &&
+                                widget.displayLocation == null
+                            ? 5
+                            : 15,
+                      ),
+                      minMaxZoomPreference: MinMaxZoomPreference(0, 16),
+                      myLocationButtonEnabled: true,
+                      myLocationEnabled: true,
+                      buildingsEnabled: false,
+                      onMapCreated: onMapCreated,
+                      onTap: (latLng) {
+                        clearOverlay();
+                        moveToLocation(latLng);
+                      },
+                      markers: markers,
                     ),
-                  ),
-                ],
-              ),
             ),
-        ],
+            if (!this.hasSearchTerm)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SelectPlaceAction(getLocationName(), () {
+                      if (Platform.isAndroid) {
+                        _delayedPop();
+                      } else {
+                        Navigator.of(context).pop(this.locationResult);
+                      }
+                    }, widget.localizationItem!.tapToSelectLocation),
+                    Divider(height: 8),
+                    Padding(
+                      child: Text(widget.localizationItem!.nearBy,
+                          style: TextStyle(fontSize: 16)),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        children: nearbyPlaces
+                            .map((it) => NearbyPlaceItem(it, () {
+                                  if (it.latLng != null) {
+                                    moveToLocation(it.latLng!);
+                                  }
+                                }))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -561,6 +599,8 @@ class PlacePickerState extends State<PlacePicker> {
     }
     if (_currentLocation != null) {
       moveToLocation(_currentLocation!);
+    } else {
+      moveToLocation(widget.defaultLocation);
     }
   }
 
@@ -570,11 +610,15 @@ class PlacePickerState extends State<PlacePicker> {
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      await _showLocationDisabledAlertDialog(context);
       // Location services are not enabled don't continue
       // accessing the position and request users of the
       // App to enable the location services.
-      return Future.error('Location services are disabled.');
+      bool? isOk = await _showLocationDisabledAlertDialog(context);
+      if (isOk ?? false) {
+        return Future.error(LocationServiceDisabledException());
+      } else {
+        return Future.error('Location Services is not enabled');
+      }
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -590,11 +634,13 @@ class PlacePickerState extends State<PlacePicker> {
     }
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
+      //return widget.defaultLocation;
       return Future.error(
           'Location permissions are permanently denied, we cannot request permissions.');
     }
     try {
-      final locationData = await Geolocator.getCurrentPosition(timeLimit: Duration(seconds: 30));
+      final locationData =
+          await Geolocator.getCurrentPosition(timeLimit: Duration(seconds: 30));
       LatLng target = LatLng(locationData.latitude, locationData.longitude);
       //moveToLocation(target);
       print('target:$target');
@@ -603,10 +649,9 @@ class PlacePickerState extends State<PlacePicker> {
       final locationData = await Geolocator.getLastKnownPosition();
       if (locationData != null) {
         return LatLng(locationData.latitude, locationData.longitude);
-      }  else {
-        return LatLng(10.5381264, 73.8827201);
+      } else {
+        return widget.defaultLocation;
       }
-
     }
   }
 
@@ -621,9 +666,15 @@ class PlacePickerState extends State<PlacePicker> {
                   "To use location, go to your Settings App > Privacy > Location Services."),
               actions: [
                 CupertinoDialogAction(
+                  child: Text("Cancel"),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+                CupertinoDialogAction(
                   child: Text("Ok"),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(true);
                   },
                 )
               ],
@@ -639,10 +690,16 @@ class PlacePickerState extends State<PlacePicker> {
                   "The app needs to access your location. Please enable location service."),
               actions: [
                 TextButton(
+                  child: Text("Cancel"),
+                  onPressed: () async {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+                TextButton(
                   child: Text("OK"),
                   onPressed: () async {
                     await Geolocator.openLocationSettings();
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(true);
                   },
                 ),
               ],
@@ -651,39 +708,30 @@ class PlacePickerState extends State<PlacePicker> {
     }
   }
 
-// Future<LatLng> _getCurrentLocationOld() async {
-//   try {
-//     final Location location = Location();
-//     bool _serviceEnabled = await location.serviceEnabled();
-//     if (!_serviceEnabled) {
-//       _serviceEnabled = await location.requestService();
-//       if (!_serviceEnabled) {
-//         print("gps service not enabled");
-//         return Future.error(Exception("gps service not enabled"));
-//       }
-//     }
-//     PermissionStatus _permissionGranted = await location.hasPermission();
-//     if (PermissionStatus.denied == _permissionGranted) {
-//       _permissionGranted = await location.requestPermission();
-//       if (_permissionGranted != PermissionStatus.granted) {
-//         print("permission not granted");
-//         return Future.error(Exception("permission not granted"));
-//       }
-//     }
-//     final locationData = await location.getLocation();
-//     if (locationData.longitude != null && locationData.latitude != null) {
-//       LatLng target =
-//       LatLng(locationData.latitude!, locationData.longitude!);
-//       //moveToLocation(target);
-//       print('target:$target');
-//       //return target;
-//       return target;
-//     } else {
-//       return Future.error(Exception("location data null"));
-//     }
-//   } catch(e) {
-//     return Future.error(e);
-//   }
-//   throw Future.error(Exception("Error Unknown"));
-// }
+  // add delay to the map pop to avoid `Fatal Exception: java.lang.NullPointerException` error on Android
+  Future<bool> _delayedPop() async {
+    Navigator.of(context, rootNavigator: true).push(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => WillPopScope(
+          onWillPop: () async => false,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(
+              child: CircularProgressIndicator.adaptive(),
+            ),
+          ),
+        ),
+        transitionDuration: Duration.zero,
+        barrierDismissible: false,
+        barrierColor: Colors.black45,
+        opaque: false,
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    Navigator.of(context)
+      ..pop()
+      ..pop(this.locationResult);
+    return Future.value(false);
+  }
 }
