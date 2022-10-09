@@ -23,7 +23,7 @@ class PickerDemoState extends State<PickerDemo> {
   }
 
   void showPlacePicker() async {
-    LocationResult result = await Navigator.of(context).push(
+    LocationResult? result = await Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => PlacePicker("YOUR API KEY")));
 
     // Handle the result in your way

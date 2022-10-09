@@ -1,5 +1,14 @@
-## [0.9.19] - 18 Jan 2022
+## [0.10.0] - 07 Oct 2022
+Dependencies updated
+Changed `location` dependency to `geolocator` for current location
+NullPointerException fix for android devices
+fixes #39 #75
+
+## [0.9.20-nullsafety] - 18 Jan 2022
 Change `body1` to `bodyText1`
+
+## [0.9.18-nullsafety] - 22 March 2021
+Upgrade to nullsafety
 
 ## [0.9.18] - 2 Nov 2020
 Upgraded http package
