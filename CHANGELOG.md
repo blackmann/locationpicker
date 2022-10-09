@@ -1,4 +1,4 @@
-## [0.9.21-nullsafety] - 07 Oct 2022
+## [0.10.0] - 07 Oct 2022
 Dependencies updated
 Changed `location` dependency to `geolocator` for current location
 NullPointerException fix for android devices
