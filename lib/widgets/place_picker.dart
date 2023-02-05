@@ -23,14 +23,15 @@ class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
+  final String countryCode;
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
   final LatLng? displayLocation;
   LocalizationItem? localizationItem;
-  LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
+  LatLng defaultLocation = LatLng(40.371642, 49.840411);
 
-  PlacePicker(this.apiKey,
+  PlacePicker(this.apiKey, this.countryCode,
       {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -137,14 +138,14 @@ class PlacePickerState extends State<PlacePicker> {
           locationResult = null;
           _delayedPop();
           return Future.value(false);
-        }  else  {
+        } else {
           return Future.value(true);
         }
       },
       child: Scaffold(
         appBar: AppBar(
           key: this.appBarKey,
-          title: SearchInput(searchPlace),
+          title: SearchInput(searchPlace, widget.localizationItem!),
           centerTitle: true,
           automaticallyImplyLeading: false,
         ),
@@ -193,7 +194,8 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
@@ -293,6 +295,7 @@ class PlacePickerState extends State<PlacePicker> {
 
       var endpoint =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json?"
+          "components=country:${widget.countryCode}&"
           "key=${widget.apiKey}&"
           "language=${widget.localizationItem!.languageCode}&"
           "input={$place}&sessiontoken=${this.sessionToken}";
