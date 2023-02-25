@@ -23,6 +23,7 @@ class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
+  final bool showBackButton;
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
@@ -31,7 +32,10 @@ class PlacePicker extends StatefulWidget {
   LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
 
   PlacePicker(this.apiKey,
-      {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
+      {this.displayLocation,
+      this.localizationItem,
+      LatLng? defaultLocation,
+      this.showBackButton = false}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -146,7 +150,7 @@ class PlacePickerState extends State<PlacePicker> {
           key: this.appBarKey,
           title: SearchInput(searchPlace, widget.localizationItem!),
           centerTitle: true,
-          automaticallyImplyLeading: false,
+          automaticallyImplyLeading: widget.showBackButton,
         ),
         body: Column(
           children: <Widget>[
