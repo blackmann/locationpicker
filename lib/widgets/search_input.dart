@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:place_picker/entities/localization_item.dart';
 
 /// Custom Search input field, showing the search and clear icons.
 class SearchInput extends StatefulWidget {
   final ValueChanged<String> onSearchInput;
+  final LocalizationItem localizationItem;
 
-  SearchInput(this.onSearchInput);
+  SearchInput(this.onSearchInput, this.localizationItem);
 
   @override
   State<StatefulWidget> createState() => SearchInputState();
@@ -57,11 +59,14 @@ class SearchInputState extends State<SearchInput> {
       padding: EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: <Widget>[
-          Icon(Icons.search, color: Theme.of(context).textTheme.bodyText1?.color),
+          Icon(Icons.search,
+              color: Theme.of(context).textTheme.bodyText1?.color),
           SizedBox(width: 8),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(hintText: "Search place", border: InputBorder.none),
+              decoration: InputDecoration(
+                  hintText: widget.localizationItem.searchHint,
+                  border: InputBorder.none),
               controller: this.editController,
               onChanged: (value) {
                 setState(() {

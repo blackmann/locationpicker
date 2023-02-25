@@ -137,14 +137,14 @@ class PlacePickerState extends State<PlacePicker> {
           locationResult = null;
           _delayedPop();
           return Future.value(false);
-        }  else  {
+        } else {
           return Future.value(true);
         }
       },
       child: Scaffold(
         appBar: AppBar(
           key: this.appBarKey,
-          title: SearchInput(searchPlace),
+          title: SearchInput(searchPlace, widget.localizationItem!),
           centerTitle: true,
           automaticallyImplyLeading: false,
         ),
@@ -193,7 +193,8 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
