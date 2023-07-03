@@ -147,6 +147,16 @@ class PlacePickerState extends State<PlacePicker> {
           title: SearchInput(searchPlace),
           centerTitle: true,
           automaticallyImplyLeading: false,
+           leading: InkWell(
+          highlightColor:Colors.transparent,
+          onTap: () {
+           _delayedPop();
+          },
+          child: const Icon(
+            Icons.arrow_back_ios,
+            size: 20,
+          ),
+        ),
         ),
         body: Column(
           children: <Widget>[
