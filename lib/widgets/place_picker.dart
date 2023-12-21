@@ -90,15 +90,8 @@ class PlacePickerState extends State<PlacePicker> {
     super.initState();
     if (widget.displayLocation == null) {
       _getCurrentLocation().then((value) {
-        if (value != null) {
-          setState(() {
-            _currentLocation = value;
-          });
-        } else {
-          //Navigator.of(context).pop(null);
-          print("getting current location null");
-        }
         setState(() {
+          _currentLocation = value;
           _loadMap = true;
         });
       }).catchError((e) {
@@ -137,7 +130,7 @@ class PlacePickerState extends State<PlacePicker> {
           locationResult = null;
           _delayedPop();
           return Future.value(false);
-        }  else  {
+        } else {
           return Future.value(true);
         }
       },
@@ -193,7 +186,8 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
@@ -236,7 +230,7 @@ class PlacePickerState extends State<PlacePicker> {
 
     previousSearchTerm = place;
 
-    if (context == null) {
+    if (!context.mounted) {
       return;
     }
 
@@ -281,7 +275,7 @@ class PlacePickerState extends State<PlacePicker> {
       ),
     );
 
-    Overlay.of(context)?.insert(this.overlayEntry!);
+    Overlay.of(context).insert(this.overlayEntry!);
 
     autoCompleteSearch(place);
   }
@@ -397,7 +391,7 @@ class PlacePickerState extends State<PlacePicker> {
       ),
     );
 
-    Overlay.of(context)?.insert(this.overlayEntry!);
+    Overlay.of(context).insert(this.overlayEntry!);
   }
 
   /// Utility function to get clean readable name of a location. First checks
@@ -512,7 +506,7 @@ class PlacePickerState extends State<PlacePicker> {
             result['address_components'].length > 0) {
           for (var i = 0; i < result['address_components'].length; i++) {
             var tmp = result['address_components'][i];
-            var types = tmp["types"] as List<dynamic>;
+            var types = tmp["types"] as List<dynamic>?;
             var shortName = tmp['short_name'];
             if (types == null) {
               continue;
@@ -645,7 +639,7 @@ class PlacePickerState extends State<PlacePicker> {
       //moveToLocation(target);
       print('target:$target');
       return target;
-    } on TimeoutException catch (e) {
+    } on TimeoutException catch (_) {
       final locationData = await Geolocator.getLastKnownPosition();
       if (locationData != null) {
         return LatLng(locationData.latitude, locationData.longitude);
