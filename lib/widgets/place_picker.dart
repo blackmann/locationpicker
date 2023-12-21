@@ -230,7 +230,7 @@ class PlacePickerState extends State<PlacePicker> {
 
     previousSearchTerm = place;
 
-    if (context.mounted) {
+    if (!context.mounted) {
       return;
     }
 
