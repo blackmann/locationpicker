@@ -23,6 +23,7 @@ class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
+  final AppBarOptions? appBarOptions;
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
@@ -31,7 +32,10 @@ class PlacePicker extends StatefulWidget {
   LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
 
   PlacePicker(this.apiKey,
-      {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
+      {this.displayLocation,
+      this.localizationItem,
+      LatLng? defaultLocation,
+      this.appBarOptions}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -137,16 +141,18 @@ class PlacePickerState extends State<PlacePicker> {
           locationResult = null;
           _delayedPop();
           return Future.value(false);
-        }  else  {
+        } else {
           return Future.value(true);
         }
       },
       child: Scaffold(
         appBar: AppBar(
           key: this.appBarKey,
-          title: SearchInput(searchPlace),
+          title: SearchInput(searchPlace, widget.localizationItem!),
           centerTitle: true,
-          automaticallyImplyLeading: false,
+          leading: widget.appBarOptions?.leading,
+          automaticallyImplyLeading:
+              widget.appBarOptions?.showBackButton ?? false,
         ),
         body: Column(
           children: <Widget>[
@@ -193,7 +199,8 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
