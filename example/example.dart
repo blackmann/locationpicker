@@ -12,7 +12,7 @@ class PickerDemoState extends State<PickerDemo> {
     return Scaffold(
       appBar: AppBar(title: const Text('Picker Example')),
       body: Center(
-        child: FlatButton(
+        child: TextButton(
           child: Text("Pick Delivery location"),
           onPressed: () {
             showPlacePicker();
@@ -23,8 +23,8 @@ class PickerDemoState extends State<PickerDemo> {
   }
 
   void showPlacePicker() async {
-    LocationResult? result = await Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => PlacePicker("YOUR API KEY")));
+    LocationResult? result =
+        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => PlacePicker("YOUR API KEY")));
 
     // Handle the result in your way
     print(result);
