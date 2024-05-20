@@ -24,18 +24,23 @@ class RichSuggestion extends StatelessWidget {
     final List<TextSpan> result = [];
     final style = TextStyle(color: Colors.grey, fontSize: 15);
 
-    final startText = autoCompleteItem.text?.substring(0, autoCompleteItem.offset);
+    final startText =
+        autoCompleteItem.text?.substring(0, autoCompleteItem.offset);
     if (startText?.isNotEmpty == true) {
       result.add(TextSpan(text: startText, style: style));
     }
 
-    final boldText =
-        autoCompleteItem.text?.substring(autoCompleteItem.offset!, autoCompleteItem.offset! + autoCompleteItem.length!);
+    final boldText = autoCompleteItem.text?.substring(autoCompleteItem.offset!,
+        autoCompleteItem.offset! + autoCompleteItem.length!);
     result.add(
-      TextSpan(text: boldText, style: style.copyWith(color: Theme.of(context).textTheme.bodyText1?.color)),
+      TextSpan(
+          text: boldText,
+          style: style.copyWith(
+              color: Theme.of(context).textTheme.bodySmall?.color)),
     );
 
-    final remainingText = autoCompleteItem.text?.substring(autoCompleteItem.offset! + autoCompleteItem.length!);
+    final remainingText = autoCompleteItem.text
+        ?.substring(autoCompleteItem.offset! + autoCompleteItem.length!);
     result.add(TextSpan(text: remainingText, style: style));
 
     return result;
