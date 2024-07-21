@@ -32,7 +32,7 @@ class RichSuggestion extends StatelessWidget {
     final boldText =
         autoCompleteItem.text?.substring(autoCompleteItem.offset!, autoCompleteItem.offset! + autoCompleteItem.length!);
     result.add(
-      TextSpan(text: boldText, style: style.copyWith(color: Theme.of(context).textTheme.bodyText1?.color)),
+      TextSpan(text: boldText, style: style.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color)),
     );
 
     final remainingText = autoCompleteItem.text?.substring(autoCompleteItem.offset! + autoCompleteItem.length!);
