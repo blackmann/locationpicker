@@ -4,15 +4,14 @@ version: 0.10.0
 homepage: https://github.com/blackmann/locationpicker
 
 environment:
-  sdk: ">=2.14.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.5
-  google_maps_flutter: ^2.2.0
-#  location: ^4.4.0
-  geolocator: ^9.0.1
+  http: ^1.2.2
+  google_maps_flutter: ^2.6.1
+  geolocator: ^13.0.1
 
 dev_dependencies:
   flutter_test:
