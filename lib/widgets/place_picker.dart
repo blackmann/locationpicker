@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:place_picker/entities/entities.dart';
@@ -23,6 +24,7 @@ class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
+  final AppBarOptions? appBarOptions;
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
@@ -31,7 +33,10 @@ class PlacePicker extends StatefulWidget {
   LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
 
   PlacePicker(this.apiKey,
-      {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
+      {this.displayLocation,
+      this.localizationItem,
+      LatLng? defaultLocation,
+      this.appBarOptions}) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
     }
@@ -90,14 +95,9 @@ class PlacePickerState extends State<PlacePicker> {
     super.initState();
     if (widget.displayLocation == null) {
       _getCurrentLocation().then((value) {
-        if (value != null) {
-          setState(() {
-            _currentLocation = value;
-          });
-        } else {
-          //Navigator.of(context).pop(null);
-          print("getting current location null");
-        }
+        setState(() {
+          _currentLocation = value;
+        });
         setState(() {
           _loadMap = true;
         });
@@ -131,22 +131,26 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        if (Platform.isAndroid) {
-          locationResult = null;
-          _delayedPop();
-          return Future.value(false);
-        }  else  {
-          return Future.value(true);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          if (Platform.isAndroid) {
+            locationResult = null;
+            _delayedPop();
+          } else {
+            Navigator.of(context).pop(result);
+          }
         }
       },
       child: Scaffold(
         appBar: AppBar(
           key: this.appBarKey,
-          title: SearchInput(searchPlace),
+          title: SearchInput(searchPlace, widget.localizationItem!),
           centerTitle: true,
-          automaticallyImplyLeading: false,
+          leading: widget.appBarOptions?.leading,
+          automaticallyImplyLeading:
+              widget.appBarOptions?.showBackButton ?? false,
         ),
         body: Column(
           children: <Widget>[
@@ -193,7 +197,8 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
@@ -236,10 +241,6 @@ class PlacePickerState extends State<PlacePicker> {
 
     previousSearchTerm = place;
 
-    if (context == null) {
-      return;
-    }
-
     clearOverlay();
 
     setState(() {
@@ -281,7 +282,7 @@ class PlacePickerState extends State<PlacePicker> {
       ),
     );
 
-    Overlay.of(context)?.insert(this.overlayEntry!);
+    Overlay.of(context).insert(this.overlayEntry!);
 
     autoCompleteSearch(place);
   }
@@ -291,6 +292,7 @@ class PlacePickerState extends State<PlacePicker> {
     try {
       place = place.replaceAll(" ", "+");
 
+      final headers = await const GoogleApiHeaders().getHeaders();
       var endpoint =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json?"
           "key=${widget.apiKey}&"
@@ -302,7 +304,7 @@ class PlacePickerState extends State<PlacePicker> {
             "${this.locationResult!.latLng?.longitude}";
       }
 
-      final response = await http.get(Uri.parse(endpoint));
+      final response = await http.get(Uri.parse(endpoint), headers: headers);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -353,12 +355,13 @@ class PlacePickerState extends State<PlacePicker> {
     clearOverlay();
 
     try {
+      final headers = await const GoogleApiHeaders().getHeaders();
       final url = Uri.parse(
           "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}&" +
               "language=${widget.localizationItem!.languageCode}&" +
               "placeid=$placeId");
 
-      final response = await http.get(url);
+      final response = await http.get(url, headers: headers);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -397,7 +400,7 @@ class PlacePickerState extends State<PlacePicker> {
       ),
     );
 
-    Overlay.of(context)?.insert(this.overlayEntry!);
+    Overlay.of(context).insert(this.overlayEntry!);
   }
 
   /// Utility function to get clean readable name of a location. First checks
@@ -434,12 +437,13 @@ class PlacePickerState extends State<PlacePicker> {
   /// Fetches and updates the nearby places to the provided lat,lng
   void getNearbyPlaces(LatLng latLng) async {
     try {
+      final headers = await const GoogleApiHeaders().getHeaders();
       final url = Uri.parse(
           "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
           "key=${widget.apiKey}&location=${latLng.latitude},${latLng.longitude}"
           "&radius=150&language=${widget.localizationItem!.languageCode}");
 
-      final response = await http.get(url);
+      final response = await http.get(url, headers: headers);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -477,12 +481,13 @@ class PlacePickerState extends State<PlacePicker> {
   /// to be the road name and the locality.
   void reverseGeocodeLatLng(LatLng latLng) async {
     try {
+      final headers = await const GoogleApiHeaders().getHeaders();
       final url = Uri.parse("https://maps.googleapis.com/maps/api/geocode/json?"
           "latlng=${latLng.latitude},${latLng.longitude}&"
           "language=${widget.localizationItem!.languageCode}&"
           "key=${widget.apiKey}");
 
-      final response = await http.get(url);
+      final response = await http.get(url, headers: headers);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -514,9 +519,6 @@ class PlacePickerState extends State<PlacePicker> {
             var tmp = result['address_components'][i];
             var types = tmp["types"] as List<dynamic>;
             var shortName = tmp['short_name'];
-            if (types == null) {
-              continue;
-            }
             if (i == 0) {
               // [street_number]
               name = shortName;
@@ -639,13 +641,16 @@ class PlacePickerState extends State<PlacePicker> {
           'Location permissions are permanently denied, we cannot request permissions.');
     }
     try {
-      final locationData =
-          await Geolocator.getCurrentPosition(timeLimit: Duration(seconds: 30));
+      final locationData = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(
+          timeLimit: Duration(seconds: 30),
+        ),
+      );
       LatLng target = LatLng(locationData.latitude, locationData.longitude);
       //moveToLocation(target);
       print('target:$target');
       return target;
-    } on TimeoutException catch (e) {
+    } on TimeoutException catch (_) {
       final locationData = await Geolocator.getLastKnownPosition();
       if (locationData != null) {
         return LatLng(locationData.latitude, locationData.longitude);
@@ -712,8 +717,8 @@ class PlacePickerState extends State<PlacePicker> {
   Future<bool> _delayedPop() async {
     Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => WillPopScope(
-          onWillPop: () async => false,
+        pageBuilder: (_, __, ___) => PopScope(
+          canPop: false,
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: Center(

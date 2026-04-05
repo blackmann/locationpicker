@@ -5,7 +5,7 @@ class LocalizationItem {
   String noResultsFound;
   String unnamedLocation;
   String tapToSelectLocation;
-
+  String searchHint;
 
   LocalizationItem({
     this.languageCode = 'en_us',
@@ -14,5 +14,6 @@ class LocalizationItem {
     this.noResultsFound = 'No results found',
     this.unnamedLocation = 'Unnamed location',
     this.tapToSelectLocation = 'Tap to select this location',
+    this.searchHint = 'Search place',
   });
 }
